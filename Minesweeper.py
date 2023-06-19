@@ -6,14 +6,12 @@
 	Winning with the second condition (revealing all tiles except for the bombs) will now flag all unflagged bombs.
 	Added timer!
 	Added dark green flags when win.
+	Appropriate colors for numbers.
 """
 """Todo:
-	Add a middle click currency system
-	Make middle click user friendly
 	Visualize win (i.e. display "Yu win!" on screen... or something)
-	Make marathon minesweeper
-	Color numbers
 	UI
+	No guess Minesweeper
 """
 #sample = [['x', '', '', '', ''], ['', '', '', '', ''], ['', '', '', '', ''], ['', '', '', 'x', ''], ['', '', '', '', '']]
 import pygame as pg
@@ -338,12 +336,9 @@ def display_message(text, size):
 	pg.display.update()
 
 
-def win(marathon=False):
+def win():
 	"""A game loop for when the player wins."""
-	if marathon:
-		print('Yu win! Press ESC to quit. Press ENTER to move on to the next stage.')
-	else:
-		print(f'Yu win! (in {round(timer.time)} seconds!) Press ESC to quit. Press R to restart')
+	print(f'Yu win! (in {round(timer.time)} seconds!) Press ESC to quit. Press R to restart')
 	endgame()
 
 def lose():
@@ -352,7 +347,7 @@ def lose():
 	print('boom! Press ESC to quit. Press R to restart')
 	endgame()
 
-def endgame(marathon=False):
+def endgame():
 	"""A game loop for when the player finishes a game (win or lose)"""
 	board.draw(draw_all=True)
 	pg.display.update()
@@ -369,7 +364,7 @@ def intro():
 	"""work in progress."""
 	screen.fill(white)
 
-def main(marathon=False):
+def main():
 	global board
 	global timer
 	board = Board(board_width, board_height)
