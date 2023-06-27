@@ -354,15 +354,6 @@ def mouse_tile(pos):
 	return(tile_x,tile_y)
 	#TEMPORARY
 
-
-def display_message(text, size):
-	"""WIP"""
-	font = pg.font.SysFont("Arial", size)
-	text_surface = font.render(text, True)
-	screen.blit(text_surface,( int(displayW/2 - size/2), int(displayH/2 - size/2)))
-	pg.display.update()
-
-
 def win():
 	"""A game loop for when the player wins."""
 	print(f'Yu win! (in {round(timer.time)} seconds!) Press ESC to quit. Press R to restart')
@@ -386,10 +377,6 @@ def endgame():
 			elif event.type == pg.KEYDOWN:
 				if event.key == pg.K_r:
 					main()
-
-def intro():
-	"""work in progress."""
-	screen.fill(white)
 
 def main():
 	global timer
