@@ -148,7 +148,7 @@ class Board:
 
 		pg.display.set_caption(f'Maxsweeper - Bombs left: {str(self.bomb_count - len(flaggedTiles))} - {str(round(timer.query()))} seconds')
 
-		if not self.pre_reveal:
+		if not self.pre_reveal and not self.lose:
 			if len(foundTiles) == self.bomb_count and self.bomb_count - len(flaggedTiles) >= 0:
 				self.win = True
 				#Code below reveals all non-bomb tiles that have not been revealed.
