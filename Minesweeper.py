@@ -13,22 +13,34 @@
 	UI
 	No guess Minesweeper
 """
-#sample = [['x', '', '', '', ''], ['', '', '', '', ''], ['', '', '', '', ''], ['', '', '', 'x', ''], ['', '', '', '', '']]
 import pygame as pg
 from time import sleep, time
 from random import choice, randint
 pg.init()
 pg.display.set_caption('Maxsweeper - Bombs left: N/A')
 
-#Constants:
-board_width = 30
-board_height = 16
-bomb_percentage = 20.75
-
 #Increase to make board bigger
-relative_board_length = 1500
+relative_board_length = 1000
 #Increase to make margins bigger
 relative_margin_length = 2
+
+use_sample_board = True
+
+sample = [['x', ' ', ' ', ' ', ' '],
+		  [' ', ' ', ' ', ' ', ' '],
+		  [' ', ' ', ' ', ' ', ' '],
+		  [' ', ' ', ' ', 'x', 'x'],
+		  [' ', ' ', ' ', 'x', ' ']]
+first_tile = (2,1)
+
+#Constants:
+if use_sample_board:
+	board_width = len(sample[0])
+	board_height = len(sample)
+else:
+	board_width = 5
+	board_height = 5
+bomb_percentage = 20.75
 
 
 #Colors:
@@ -82,23 +94,37 @@ class Board:
 		self.win = False
 		self.lose = False
 		self.pre_reveal = True
+		self.first_tile = None
 		for row in range(height):
 			self.tiles.append([])
 			for col in range(width):
 				c = Tile(self, (col,row))
 				self.tiles[row].append(c)
 
-	def add_bombs_custom(self, array):
-		"""A method for testing purposes only. Lets you submit an array
-		with either "x"s or "" with "x" representing a bomb and "" representing...
-		not a bomb. (WARNING THIS WON"T ENSURE A SAFE FIRST CLICK)"""
-		bomb_count = 0
-		for b, row in enumerate(array):
-			for bb, item in enumerate(row):
-				if item == 'x':
-					bomb_count += 1
-					board.tiles[b][bb].is_bomb = True
-		self.bomb_count = bomb_count
+	@staticmethod
+	def create_custom_board(bomb_array, first_tile):
+		"""Create a board from an array of either "x"s or "" with "x" 
+		representing a bomb and "" representing... not a bomb AND a tile
+		that represents the first place a user clicks. This tile will
+		be revealed immediately"""
+
+		# Create board
+		board = Board(len(bomb_array[0]), len(bomb_array))
+		board.first_tile = first_tile
+
+		# Add bombs
+		for row in range(len(bomb_array)):
+			for col in range(len(bomb_array[row])):
+				if bomb_array[row][col] == 'x':
+					board.tiles[row][col].is_bomb = True
+		board.bomb_count = sum([sum([1 for tile in row if tile.is_bomb]) for row in board.tiles])
+
+		# Reveal first tile
+		timer.start()
+		board.tiles[first_tile[1]][first_tile[0]].reveal()
+		board.pre_reveal = False
+
+		return board
 
 	def draw(self,draw_all=False):
 		"""Draws the every tile in self.tiles and textto the board.
@@ -139,6 +165,7 @@ class Board:
 		"""Adds bombs to the board. takes perc_bombs% of the board
 		will be bombs. Ex: let perc_bombs = 1, 1% of the board will have bombs.
 		The mainSafeTile and it's 8 surrounding tiles will not have bombs."""
+		self.first_tile = mainSafeTile.coords
 		safeTiles = mainSafeTile.surrounding_bombs(mode=3)
 		safeTiles.append(mainSafeTile)
 		chance = perc_bombs / 100 
@@ -230,7 +257,7 @@ class Tile:
 				else:
 					print(f'L {self.coords}')
 
-	def reveal(self, clear=False):
+	def reveal(self):
 		"""What to do when someone reveals (left click) a 
 		tile or the sytem reveals a tile."""
 		if not self.is_flagged:
@@ -365,10 +392,15 @@ def intro():
 	screen.fill(white)
 
 def main():
-	global board
 	global timer
-	board = Board(board_width, board_height)
 	timer = Timer()
+
+	global board
+	if use_sample_board:
+		board = Board.create_custom_board(sample, first_tile)
+	else:
+		board = Board(board_width, board_height)
+
 	screen.fill(white)
 
 	locked = True
