@@ -20,26 +20,26 @@ pg.init()
 pg.display.set_caption('Maxsweeper - Bombs left: N/A')
 
 #Increase to make board bigger
-relative_board_length = 1000
+relative_board_length = 1500
 #Increase to make margins bigger
 relative_margin_length = 2
 
-use_sample_board = True
+use_sample_board = False
 
 sample = [['x', ' ', ' ', ' ', ' '],
 		  [' ', ' ', ' ', ' ', ' '],
 		  [' ', ' ', ' ', ' ', ' '],
 		  [' ', ' ', ' ', 'x', 'x'],
 		  [' ', ' ', ' ', 'x', ' ']]
-first_tile = (2,1)
+first_tile = (1,2)
 
 #Constants:
 if use_sample_board:
 	board_width = len(sample[0])
 	board_height = len(sample)
 else:
-	board_width = 5
-	board_height = 5
+	board_width = 30
+	board_height = 16
 bomb_percentage = 20.75
 
 
@@ -203,18 +203,18 @@ class Tile:
 		y = (self.y + 1) * margin_length + tile_length * self.y
 		#TEMPORARY
 		if self.is_flagged:
-			color = black
+			color = red
 			if self.board.lose:
 				if not self.is_bomb:
-					color = dark_grey
+					color = maroon
 			if self.board.win:
 				color = dark_green
 		elif self.is_revealed:
 			color = white
 			if self.is_bomb:
-				color = maroon
+				color = dark_grey
 		elif self.board.lose and self.is_bomb:
-			color = red
+			color = black
 
 		else:
 			color = grey
