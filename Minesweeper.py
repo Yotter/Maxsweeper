@@ -182,6 +182,17 @@ class Board:
 						break
 		self.bomb_count = bombs_num
 
+	def get_exposed_tiles(self):
+		"""Return a list of all unrevealed tiles that are adjacent to revealed tiles."""
+		exposed_tiles = []
+		for row in self.tiles:
+			for tile in row:
+				if not tile.is_revealed:
+					for neighbor_tile in tile.surrounding_bombs(mode=3):
+						if neighbor_tile.is_revealed:
+							if tile not in exposed_tiles:
+								exposed_tiles.append(tile)
+		return exposed_tiles
 
 class Tile:
 
@@ -245,13 +256,13 @@ class Tile:
 		else:
 			if self.is_revealed:
 				return None
-			elif button == 3:
+			elif button == 3: # Right click
 				self.is_flagged = not self.is_flagged
 				if self.is_bomb:
 					self.is_found = not self.is_found
-			elif button == 1:
+			elif button == 1: # Left click
 					self.reveal()
-			elif button == 2:
+			elif button == 2: # Middle click
 				if self.is_bomb:
 					print(f'R {self.coords}')
 				else:
@@ -281,7 +292,7 @@ class Tile:
 		timer.start()
 
 	def surrounding_bombs(self,mode=1):
-		"""A function with 2 modes so as to reuse a lot of the same code.
+		"""A function with 3 modes so as to reuse a lot of the same code.
 		Mode 1: Returns the number of bombs immediately surrounding the tile.
 		Mode 2: Reveals the surrounding tiles.
 		Mode 3: Return the surrounding tiles (a list of Tile-object instances)."""
@@ -403,6 +414,12 @@ def main():
 					locked = False
 				elif event.key == pg.K_r:
 					main()
+				elif event.key == pg.K_f:
+					# TEMPORARY
+					exposed_tiles = board.get_exposed_tiles()
+					for tile in exposed_tiles:
+						tile.activate(button=3)
+					print(Board.make_dict_with_null_values(exposed_tiles))
 		board.draw()
 		pg.display.update()
 		if board.win:
