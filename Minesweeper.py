@@ -194,6 +194,96 @@ class Board:
 								exposed_tiles.append(tile)
 		return exposed_tiles
 
+	def get_configurations(self):
+		"""Returns a list of all the possible configurations for the exposed tiles as lists of bombs represented as True and non-bombs represented as False like so:
+			[
+				[
+					(0,0) : True
+					(0,1) : False
+					(0,2) : False
+					(1,0) : False
+					(1,1) : False
+					(1,2) : False
+					(2,1) : False
+					(2,2) : False
+				],
+				[
+					(0,0) : False
+					(0,1) : True
+					(0,2) : False
+					(1,0) : False
+					(1,1) : False
+					(1,2) : False
+					(2,1) : False
+					(2,2) : False
+				],
+				[
+					(0,0) : False
+					(0,1) : False
+					(0,2) : True
+					(1,0) : False
+					(1,1) : False
+					(1,2) : False
+					(2,1) : False
+					(2,2) : False
+				]
+			]
+		As an example for a board  with 8 exposed tiles with 3 possible configurations.
+		"""
+		exposed_tiles = self.get_exposed_tiles()
+
+		# Initialize edge_tile_bombs
+		edge_tile_bombs = {}
+		for tile in exposed_tiles:
+			edge_tile_bombs[tile] = None
+
+		# Call recursivbe helper function
+		return self.get_configurations_helper(edge_tile_bombs)
+
+	def get_configurations_helper(self, edge_tile_bombs):
+		"""Helper function for get_configurations that will be called recursively.
+		@param edge_tile_bombs: A dictionary with the keys being the exposed tiles and the values being either True or False or None.
+			- True: The tile is a bomb
+			- False: The tile is not a bomb
+			- None: The tile has not been assigned a value yet.
+		@return a list of edge_tile_bombs' with all possible configurations."""
+
+		# Base case
+		if None not in edge_tile_bombs.values():
+			return [edge_tile_bombs]
+
+		# Recursive case
+		configurations = []
+		
+		# Find the first key with a value of None
+		for key in edge_tile_bombs:
+			if edge_tile_bombs[key] == None:
+				break
+
+		# Add a configuration with the key being True if it is a valid configuration
+		edge_tile_bombs_copy1 = edge_tile_bombs.copy()
+		edge_tile_bombs_copy1[key] = True
+		if self.is_valid_configuration(edge_tile_bombs_copy1):
+			configurations += self.get_configurations_helper(edge_tile_bombs_copy1)
+
+		# Add a configuration with the key being False if it is a valid configuration
+		edge_tile_bombs_copy2 = edge_tile_bombs.copy()
+		edge_tile_bombs_copy2[key] = False
+		if self.is_valid_configuration(edge_tile_bombs_copy2):
+			configurations += self.get_configurations_helper(edge_tile_bombs_copy2)
+
+		return configurations
+	
+	def is_valid_configuration(self, edge_tile_bombs):
+		"""
+		Return False if 'edge_tile_bombs' is illegal given the current board state.
+		"""
+		
+		
+	
+
+
+
 class Tile:
 
 	def __init__(self,board,coords):
