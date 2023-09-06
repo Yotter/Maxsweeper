@@ -91,6 +91,7 @@ class Board:
 		self.height = height
 		self.bomb_count = 0
 		self.tiles = []
+		self.nummed_tiles = [] # Tiles that appear as a number on the board (are surrounded by > 0 bombs and not a bomb themselves)
 		self.win = False
 		self.lose = False
 		self.pre_reveal = True
@@ -194,6 +195,22 @@ class Board:
 								exposed_tiles.append(tile)
 		return exposed_tiles
 
+	def solve(self):
+		"""
+		@return True if the board is could be solved, False if it is not solvable.
+		"""
+		# Solve each state
+		# Check for win or stuck
+
+	def solve_state(self):
+		"""
+		Mark every uncovered tile that is definitely a bomb with a flag, uncover every tile that is definitely not a bomb
+		"""
+		# Get all possible configurations of bombs on exposed tiles
+		# Determine which tiles are ALWAYS bombs and which are ALWAYS not bombs, mark them accordingly.
+
+
+
 	def get_configurations(self):
 		"""Returns a list of all the possible configurations for the exposed tiles as lists of bombs represented as True and non-bombs represented as False like so:
 			[
@@ -237,10 +254,11 @@ class Board:
 		for tile in exposed_tiles:
 			edge_tile_bombs[tile] = None
 
-		# Call recursivbe helper function
+		# Call recursive helper function
 		return self.get_configurations_helper(edge_tile_bombs)
 
 	def get_configurations_helper(self, edge_tile_bombs):
+		# TODO: edge_tile_bombs needs to be interpreted as a list of configurations, not a single configuration.
 		"""Helper function for get_configurations that will be called recursively.
 		@param edge_tile_bombs: A dictionary with the keys being the exposed tiles and the values being either True or False or None.
 			- True: The tile is a bomb
@@ -277,10 +295,16 @@ class Board:
 	def is_valid_configuration(self, edge_tile_bombs):
 		"""
 		Return False if 'edge_tile_bombs' is illegal given the current board state.
+		@param edge_tile_bombs: A dictionary with the keys being the exposed tiles and the values being either True or False or None.
+			- True: The tile is a bomb
+			- False: The tile is not a bomb
+			- None: The tile has not been assigned a value yet.
 		"""
-		
-		
-	
+
+		# Check if there are more bombs than the board allows
+		# Check if there are less uncovered tiles than bombs left
+		# Check if any numbered tile has more bombs than its number
+		# Check if any numbered tile has less bombs + uncovered tiles than its number
 
 
 
@@ -371,6 +395,8 @@ class Tile:
 				self.num = self.surrounding_bombs(mode=1)
 				if self.num == 0:
 					self.surrounding_bombs(mode=2)
+				else:
+					self.board.nummed_tiles.append(self)
 
 	def first_reveal(self):
 		"""A function for when the user first reveals a tile.
