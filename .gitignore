@@ -1,1 +1,4 @@
+# Cache files
+*.pyc
+# My testing env
 testing.py
