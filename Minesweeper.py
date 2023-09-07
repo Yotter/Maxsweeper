@@ -16,11 +16,9 @@
 import pygame as pg
 from time import sleep, time
 from random import choice, randint
-pg.init()
-pg.display.set_caption('Maxsweeper - Bombs left: N/A')
 
 #Increase to make board bigger
-relative_board_length = 1500
+relative_board_length = 950
 #Increase to make margins bigger
 relative_margin_length = 2
 
@@ -80,9 +78,6 @@ board_length_width = (tile_length * board_width) + (margin_length * (board_width
 board_length_height = (tile_length * board_height) + (margin_length * (board_height + 1))
 displayW, displayH = (board_length_width, board_length_height)
 
-clock = pg.time.Clock()
-screen = pg.display.set_mode((displayW, displayH))
-
 
 class Board:
 
@@ -121,11 +116,48 @@ class Board:
 		board.bomb_count = sum([sum([1 for tile in row if tile.is_bomb]) for row in board.tiles])
 
 		# Reveal first tile
-		timer.start()
+		if __name__ == '__main__':
+			timer.start()
 		board.tiles[first_tile[1]][first_tile[0]].reveal()
 		board.pre_reveal = False
 
 		return board
+
+	def create_state(matrix, first_tile=None):
+		"""
+		Create a board at a particular state given a matrix (2d array) of characters and a mandatory first tile.
+		@param matrix: 2d array of characters:
+			- 'x': bomb
+			- 'r': revealed tile
+			- (other): unrevealed tile
+
+		@param first_tile (optional): tuple of coordinates of the first tile to be revealed, if None, the first tile is the first r tile found
+		@return Board object
+		"""
+		if first_tile == None:
+			for y, row in enumerate(matrix):
+				if first_tile != None:
+					break # revealed tile has been found
+				for x, col in enumerate(row):
+					if col == 'r':
+						first_tile = (y, x)
+						break
+		if first_tile == None:
+			raise ValueError('No first tile provided to function and no revealed tiles found in matrix')
+
+		board = Board.create_custom_board(matrix, first_tile) # non 'x' characters are treated as non-bombs
+		for tile in board.get_all_tiles():
+			if matrix[tile.coords[1]][tile.coords[0]] == 'r':
+				tile.reveal()
+		return board
+
+	def get_all_tiles(self):
+		"""Return a list of all tiles on the board."""
+		tiles = []
+		for row in self.tiles:
+			for tile in row:
+				tiles.append(tile)
+		return tiles
 
 	def draw(self,draw_all=False):
 		"""Draws the every tile in self.tiles and textto the board.
@@ -147,7 +179,10 @@ class Board:
 				if draw_all or tile.needs_update:
 					tile.draw()
 
-		pg.display.set_caption(f'Maxsweeper - Bombs left: {str(self.bomb_count - len(flaggedTiles))} - {str(round(timer.query()))} seconds')
+		if __name__ == '__main__':
+			pg.display.set_caption(f'Maxsweeper - Bombs left: {str(self.bomb_count - len(flaggedTiles))} - {str(round(timer.query()))} seconds')
+		else:
+			pg.display.set_caption(f'Maxsweeper - Bombs left: {str(self.bomb_count - len(flaggedTiles))}')
 
 		if not self.pre_reveal and not self.lose:
 			if len(foundTiles) == self.bomb_count and self.bomb_count - len(flaggedTiles) >= 0:
@@ -173,7 +208,7 @@ class Board:
 		bombs_num = int(self.width * self.height * chance)
 		for tile in range(bombs_num):
 			while True:
-				r_coords = (randint(0, board_width - 1), randint(0,board_height - 1))
+				r_coords = (randint(0, self.width - 1), randint(0, self.height - 1))
 				if not self.tiles[r_coords[1]][r_coords[0]].is_bomb:
 					for safeTile in safeTiles:
 						if safeTile.coords == r_coords:
@@ -249,63 +284,94 @@ class Board:
 		"""
 		exposed_tiles = self.get_exposed_tiles()
 
-		# Initialize edge_tile_bombs
-		edge_tile_bombs = {}
+		# Initialize blank_configuration
+		blank_configuration = {}
 		for tile in exposed_tiles:
-			edge_tile_bombs[tile] = None
+			blank_configuration[tile] = None
 
 		# Call recursive helper function
-		return self.get_configurations_helper(edge_tile_bombs)
+		return self.get_configurations_helper(blank_configuration)
 
-	def get_configurations_helper(self, edge_tile_bombs):
-		# TODO: edge_tile_bombs needs to be interpreted as a list of configurations, not a single configuration.
+	def get_configurations_helper(self, configuration):
 		"""Helper function for get_configurations that will be called recursively.
-		@param edge_tile_bombs: A dictionary with the keys being the exposed tiles and the values being either True or False or None.
+		@param configuration: A base configuration dictionary with the keys being the exposed tiles and the values being either True or False or None.
 			- True: The tile is a bomb
 			- False: The tile is not a bomb
 			- None: The tile has not been assigned a value yet.
-		@return a list of edge_tile_bombs' with all possible configurations."""
+		@return a list of all *possible* configurations."""
 
 		# Base case
-		if None not in edge_tile_bombs.values():
-			return [edge_tile_bombs]
+		if None not in configuration.values():
+			return [configuration]
 
 		# Recursive case
 		configurations = []
 		
 		# Find the first key with a value of None
-		for key in edge_tile_bombs:
-			if edge_tile_bombs[key] == None:
+		for key in configuration:
+			if configuration[key] == None:
 				break
 
 		# Add a configuration with the key being True if it is a valid configuration
-		edge_tile_bombs_copy1 = edge_tile_bombs.copy()
-		edge_tile_bombs_copy1[key] = True
-		if self.is_valid_configuration(edge_tile_bombs_copy1):
-			configurations += self.get_configurations_helper(edge_tile_bombs_copy1)
+		configuration_copy_1 = configuration.copy()
+		configuration_copy_1[key] = True
+		if self.is_valid_configuration(configuration_copy_1):
+			configurations += self.get_configurations_helper(configuration_copy_1)
 
 		# Add a configuration with the key being False if it is a valid configuration
-		edge_tile_bombs_copy2 = edge_tile_bombs.copy()
-		edge_tile_bombs_copy2[key] = False
-		if self.is_valid_configuration(edge_tile_bombs_copy2):
-			configurations += self.get_configurations_helper(edge_tile_bombs_copy2)
+		configuration_copy_2 = configuration.copy()
+		configuration_copy_2[key] = False
+		if self.is_valid_configuration(configuration_copy_2):
+			configurations += self.get_configurations_helper(configuration_copy_2)
 
 		return configurations
 	
-	def is_valid_configuration(self, edge_tile_bombs):
+	def is_valid_configuration(self, configuration):
 		"""
-		Return False if 'edge_tile_bombs' is illegal given the current board state.
-		@param edge_tile_bombs: A dictionary with the keys being the exposed tiles and the values being either True or False or None.
+		Return False if 'configuration' is illegal given the current board state.
+		@param configuration: A dictionary with the keys being the exposed tiles and the values being either True or False or None.
 			- True: The tile is a bomb
 			- False: The tile is not a bomb
 			- None: The tile has not been assigned a value yet.
 		"""
 
 		# Check if there are more bombs than the board allows
-		# Check if there are less uncovered tiles than bombs left
-		# Check if any numbered tile has more bombs than its number
-		# Check if any numbered tile has less bombs + uncovered tiles than its number
+		if list(configuration.values()).count(True) > self.bomb_count:
+			print('INVALID: Too many bombs')
+			return False
 
+		# Check if there are less hidden tiles than bombs left
+		bombs_left = self.bomb_count - list(configuration.values()).count(True)
+		hidden_tiles = 0
+		for row in self.tiles:
+			for tile in row:
+				if not tile.is_revealed:
+					hidden_tiles += 1
+		if hidden_tiles < bombs_left:
+			print('INVALID: Not enough hidden tiles')
+			return False
+
+		# Check all numbered tiles
+		for tile in self.nummed_tiles:
+			bombs_around_tile = 0
+			unknowns_around_tile = 0
+			surrounding_tiles = tile.surrounding_bombs(mode=3)
+			for surrounding_tile in surrounding_tiles:
+				if surrounding_tile.coords in configuration:
+					if configuration[surrounding_tile.coords] == True:
+						bombs_around_tile += 1
+					elif configuration[surrounding_tile.coords] == None:
+						unknowns_around_tile += 1
+
+			# Check if any numbered tile has more bombs than its number
+			if bombs_around_tile > tile.num:
+				print('INVALID: Too many bombs around a numbered tile: ' + str(tile.coords))
+				return False
+
+			# Check if any numbered tile has less (bombs + unknown tiles) around it than its number
+			if bombs_around_tile + unknowns_around_tile < tile.num:
+				print('INVALID: Not enough bombs around a numbered tile: ' + str(tile.coords))
+				return False
 
 
 class Tile:
@@ -405,7 +471,8 @@ class Tile:
 		#self.board.add_bombs_custom(sample) #For testing with a custom board
 		self.reveal()
 		self.board.pre_reveal = False
-		timer.start()
+		if __name__ == '__main__':
+			timer.start()
 
 	def surrounding_bombs(self,mode=1):
 		"""A function with 3 modes so as to reuse a lot of the same code.
@@ -414,13 +481,12 @@ class Tile:
 		Mode 3: Return the surrounding tiles (a list of Tile-object instances)."""
 		key = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]
 		bomb_count = 0
-		total_cleared = 0
 		tiles = []
 		for relpos in key:
 			newx = self.x + relpos[0]
 			newy = self.y + relpos[1]
 			#IF statment below for edge/corner case.
-			if newx >= 0 and newx < board_width and newy >= 0 and newy < board_height:
+			if newx >= 0 and newx < self.board.width and newy >= 0 and newy < self.board.height:
 				new_tile = self.board.tiles[newy][newx]
 				if mode == 1:
 					if new_tile.is_bomb:
@@ -483,7 +549,10 @@ def mouse_tile(pos):
 
 def win():
 	"""A game loop for when the player wins."""
-	print(f'Yu win! (in {round(timer.time)} seconds!) Press ESC to quit. Press R to restart')
+	if __name__ == '__main__':
+		print(f'Yu win! (in {round(timer.time)} seconds!) Press ESC to quit. Press R to restart')
+	else:
+		print('Yu win! Press ESC to quit. Press R to restart')
 	endgame()
 
 def lose():
@@ -551,4 +620,9 @@ def main():
 	pg.quit()
 	quit()
 
-main()
+if __name__ == '__main__':
+	pg.init()
+	pg.display.set_caption('Maxsweeper - Bombs left: N/A')
+	clock = pg.time.Clock()
+	screen = pg.display.set_mode((displayW, displayH))
+	main()
