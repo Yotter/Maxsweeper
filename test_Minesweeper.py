@@ -128,5 +128,73 @@ class ValidConfiguration(unittest.TestCase):
         self.validate_config(board, config)
         self.assertEqual(board.is_valid_configuration(config), False)
 
+    def test_valid_config1(self):
+        board = Board.create_state(
+            [
+                ['x', 'r', 'r'],
+                ['r', ' ', 'x'],
+                ['r', 'x', 'x']
+            ]
+        )
+        config = [
+            ['x', ' ', ' '],
+            [' ', 'x', '?'],
+            [' ', 'n', ' ']
+        ]
+        config = TestingTools.config_dict(config)
+        self.validate_config(board, config)
+        self.assertEqual(board.is_valid_configuration(config), True)
+
+    def test_valid_config2(self):
+        board = Board.create_state(
+            [
+                ['x', 'r', 'r'],
+                ['r', ' ', 'x'],
+                ['r', 'x', 'x']
+            ]
+        )
+        config = [
+            ['?', ' ', ' '],
+            [' ', '?', '?'],
+            [' ', '?', ' ']
+        ]
+        config = TestingTools.config_dict(config)
+        self.validate_config(board, config)
+        self.assertEqual(board.is_valid_configuration(config), True)
+
+    def test_valid_config3(self):
+        board = Board.create_state(
+            [
+                ['r', 'r', 'r'],
+                ['r', 'x', 'r'],
+                ['r', 'r', 'r']
+            ]
+        )
+        config = [
+            [' ', ' ', ' '],
+            [' ', 'x', ' '],
+            [' ', ' ', ' ']
+        ]
+        config = TestingTools.config_dict(config)
+        self.validate_config(board, config)
+        self.assertEqual(board.is_valid_configuration(config), True)
+
+    def test_valid_config4(self):
+        board = Board.create_state(
+            [
+                ['r', 'r', 'r'],
+                ['r', 'x', 'r'],
+                ['r', 'r', 'r']
+            ]
+        )
+        config = [
+            [' ', ' ', ' '],
+            [' ', '?', ' '],
+            [' ', ' ', ' ']
+        ]
+        config = TestingTools.config_dict(config)
+        self.validate_config(board, config)
+        self.assertEqual(board.is_valid_configuration(config), True)
+
 if __name__ == '__main__':
     unittest.main()
