@@ -29,19 +29,48 @@ class TestingTools:
                     config[(x, y)] = None
         return config
 
-class ValidConfiguration(unittest.TestCase):
-    """
-    Tests for Board.is_valid_configuration()
-    """
+    @staticmethod
+    def config_mtrx(config_dict):
+        """
+        Create a more readable matrix from a config dictionary
+        @param config_dict: dictionary of tile coordinates to True / False / None
 
-    def validate_config(self, board, config):
+        @return: 2d array of characters:
+            - 'x': bomb
+            - 'n': not a bomb
+            - '?': unknown tile
+            - ' ': not in config
+        """
+        config_mtrx = []
+        width = max([x for x, y in config_dict.keys()]) + 1
+        height = max([y for x, y in config_dict.keys()]) + 1
+        for y in range(height):
+            config_mtrx.append([' '] * width)
+
+        for coords, value in config_dict.items():
+            x, y = coords
+            if value == True:
+                config_mtrx[y][x] = 'x'
+            elif value == False:
+                config_mtrx[y][x] = 'n'
+            elif value == None:
+                config_mtrx[y][x] = '?'
+        return config_mtrx
+
+    @staticmethod
+    def validate_config(board, config):
         """
         Ensure that config contains exactly the exposed tiles of the board.
         """
         exposed_tiles = board.get_exposed_tiles()
-        self.assertEqual(len(exposed_tiles), len(config))
+        assert len(exposed_tiles) == len(config)
         for tile in exposed_tiles:
-            self.assertIn(tile.coords, config)
+            assert tile.coords in config
+
+class ValidConfiguration(unittest.TestCase):
+    """
+    Tests for Board.is_valid_configuration()
+    """
 
     def test_too_many_bombs(self):
         board = Board.create_state(
@@ -57,7 +86,7 @@ class ValidConfiguration(unittest.TestCase):
             [' ', 'x', ' ']
         ]
         config = TestingTools.config_dict(config)
-        self.validate_config(board, config)
+        TestingTools.validate_config(board, config)
         self.assertEqual(board.is_valid_configuration(config), False)
 
     def test_not_enough_bombs1(self):
@@ -74,7 +103,7 @@ class ValidConfiguration(unittest.TestCase):
             [' ', 'n', ' ']
         ]
         config = TestingTools.config_dict(config)
-        self.validate_config(board, config)
+        TestingTools.validate_config(board, config)
         self.assertEqual(board.is_valid_configuration(config), False)
 
     def test_not_enough_bombs2(self):
@@ -91,7 +120,7 @@ class ValidConfiguration(unittest.TestCase):
             [' ', 'n', ' ']
         ]
         config = TestingTools.config_dict(config)
-        self.validate_config(board, config)
+        TestingTools.validate_config(board, config)
         self.assertEqual(board.is_valid_configuration(config), False)
 
     def test_more_than_number(self):
@@ -108,7 +137,7 @@ class ValidConfiguration(unittest.TestCase):
             [' ', 'x', ' ']
         ]
         config = TestingTools.config_dict(config)
-        self.validate_config(board, config)
+        TestingTools.validate_config(board, config)
         self.assertEqual(board.is_valid_configuration(config), False)
 
     def test_less_than_number(self):
@@ -125,7 +154,7 @@ class ValidConfiguration(unittest.TestCase):
             [' ', 'n', ' ']
         ]
         config = TestingTools.config_dict(config)
-        self.validate_config(board, config)
+        TestingTools.validate_config(board, config)
         self.assertEqual(board.is_valid_configuration(config), False)
 
     def test_valid_config1(self):
@@ -142,7 +171,7 @@ class ValidConfiguration(unittest.TestCase):
             [' ', 'n', ' ']
         ]
         config = TestingTools.config_dict(config)
-        self.validate_config(board, config)
+        TestingTools.validate_config(board, config)
         self.assertEqual(board.is_valid_configuration(config), True)
 
     def test_valid_config2(self):
@@ -159,7 +188,7 @@ class ValidConfiguration(unittest.TestCase):
             [' ', '?', ' ']
         ]
         config = TestingTools.config_dict(config)
-        self.validate_config(board, config)
+        TestingTools.validate_config(board, config)
         self.assertEqual(board.is_valid_configuration(config), True)
 
     def test_valid_config3(self):
@@ -176,7 +205,7 @@ class ValidConfiguration(unittest.TestCase):
             [' ', ' ', ' ']
         ]
         config = TestingTools.config_dict(config)
-        self.validate_config(board, config)
+        TestingTools.validate_config(board, config)
         self.assertEqual(board.is_valid_configuration(config), True)
 
     def test_valid_config4(self):
@@ -193,8 +222,73 @@ class ValidConfiguration(unittest.TestCase):
             [' ', ' ', ' ']
         ]
         config = TestingTools.config_dict(config)
-        self.validate_config(board, config)
+        TestingTools.validate_config(board, config)
         self.assertEqual(board.is_valid_configuration(config), True)
+
+class ConfigurationsGenerator(unittest.TestCase):
+    """
+    Tests for board.get_configurations_helper()
+    """
+
+    def test_base_case(self):
+        board = Board.create_state(
+            [
+                ['x', 'r', 'r'],
+                ['r', ' ', 'x'],
+                ['r', 'x', 'x']
+            ]
+        )
+        config = [
+            ['x', ' ', ' '],
+            [' ', 'n', 'x'],
+            [' ', 'x', ' ']
+        ]
+        config = TestingTools.config_dict(config)
+        TestingTools.validate_config(board, config)
+        self.assertEqual(board.get_configurations_helper(config), [config])
+
+    def test_dead_end(self):
+        board = Board.create_state(
+            [
+                ['x', 'r', 'r'],
+                ['r', ' ', 'x'],
+                ['r', 'x', 'x']
+            ]
+        )
+        config = [
+            ['?', ' ', ' '],
+            [' ', 'x', '?'],
+            [' ', '?', ' ']
+        ]
+        config = TestingTools.config_dict(config)
+        TestingTools.validate_config(board, config)
+        self.assertEqual(board.get_configurations_helper(config), [])
+
+    def test_one_solution(self):
+        board = Board.create_state(
+            [
+                ['x', 'r', 'r'],
+                ['r', ' ', 'x'],
+                ['r', 'x', 'x']
+            ]
+        )
+        config = [
+            ['?', ' ', ' '],
+            [' ', '?', '?'],
+            [' ', '?', ' ']
+        ]
+        config = TestingTools.config_dict(config)
+        TestingTools.validate_config(board, config)
+        configurations = board.get_configurations_helper(config)
+        self.assertEqual(len(configurations), 1)
+        self.assertEqual(configurations[0], TestingTools.config_dict(
+            [
+                ['x', ' ', ' '],
+                [' ', 'n', 'x'],
+                [' ', 'x', ' ']
+            ]
+        ))
+
 
 if __name__ == '__main__':
     unittest.main()
