@@ -330,10 +330,12 @@ class Board:
 	def is_valid_configuration(self, configuration):
 		"""
 		Return False if 'configuration' is illegal given the current board state.
-		@param configuration: A dictionary with the keys being the exposed tiles and the values being either True or False or None.
-			- True: The tile is a bomb
-			- False: The tile is not a bomb
-			- None: The tile has not been assigned a value yet.
+		@param configuration: A dictionary with the keys being the exposed tiles and the values being either True or False or None:
+
+			- True: The tile is supposed to be a bomb
+			- False: The tile is supposed to not be a bomb
+			- None: The tile has value has not been assigned yet
+		@return bool True if the configuration is valid, False if it is not.
 		"""
 
 		# Check if there are more bombs than the board allows
