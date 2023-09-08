@@ -58,5 +58,22 @@ class ValidConfiguration(unittest.TestCase):
         self.validate_config(board, config)
         self.assertEqual(board.is_valid_configuration(config), False)
 
+    def test_not_enough_bombs(self):
+        board = Board.create_state(
+            [
+                ['x', 'r', 'r'],
+                ['r', ' ', 'x'],
+                ['r', 'x', 'x']
+            ]
+        )
+        config = [
+            ['x', ' ', ' '],
+            [' ', 'x', 'n'],
+            [' ', 'n', ' ']
+        ]
+        config = TestingTools.config_dict(config)
+        self.validate_config(board, config)
+        self.assertEqual(board.is_valid_configuration(config), False)
+
 if __name__ == '__main__':
     unittest.main()

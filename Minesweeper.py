@@ -341,13 +341,14 @@ class Board:
 			return False
 
 		# Check if there are less hidden tiles than bombs left
-		bombs_left = self.bomb_count - list(configuration.values()).count(True)
-		hidden_tiles = 0
-		for row in self.tiles:
-			for tile in row:
-				if not tile.is_revealed:
-					hidden_tiles += 1
-		if hidden_tiles < bombs_left:
+		potential_bomb_tiles = 0
+		for tile in self.get_all_tiles():
+			if not tile.is_revealed:
+				if tile.coords not in configuration:
+					potential_bomb_tiles += 1
+				elif configuration[tile.coords] == True:
+					potential_bomb_tiles += 1
+		if potential_bomb_tiles < self.bomb_count:
 			print('INVALID: Not enough hidden tiles')
 			return False
 
@@ -372,6 +373,8 @@ class Board:
 			if bombs_around_tile + unknowns_around_tile < tile.num:
 				print('INVALID: Not enough bombs around a numbered tile: ' + str(tile.coords))
 				return False
+
+		return True
 
 
 class Tile:
