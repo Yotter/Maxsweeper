@@ -127,6 +127,7 @@ class Board:
 		"""
 		Create a board at a particular state given a matrix (2d array) of characters and a mandatory first tile.
 		@param matrix: 2d array of characters:
+
 			- 'x': bomb
 			- 'r': revealed tile
 			- (other): unrevealed tile
@@ -347,6 +348,8 @@ class Board:
 				if tile.coords not in configuration:
 					potential_bomb_tiles += 1
 				elif configuration[tile.coords] == True:
+					potential_bomb_tiles += 1
+				elif configuration[tile.coords] == None:
 					potential_bomb_tiles += 1
 		if potential_bomb_tiles < self.bomb_count:
 			print('INVALID: Not enough hidden tiles')

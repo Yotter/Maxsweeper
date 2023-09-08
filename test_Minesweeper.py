@@ -15,6 +15,8 @@ class TestingTools:
             - 'n': not a bomb
             - '?': unknown tile
             - ' ': not in config
+
+        @return: dictionary of tile coordinates to True / False / None
         """
         config = {}
         for y in range(len(config_mtrx)):
@@ -58,7 +60,7 @@ class ValidConfiguration(unittest.TestCase):
         self.validate_config(board, config)
         self.assertEqual(board.is_valid_configuration(config), False)
 
-    def test_not_enough_bombs(self):
+    def test_not_enough_bombs1(self):
         board = Board.create_state(
             [
                 ['x', 'r', 'r'],
@@ -69,6 +71,57 @@ class ValidConfiguration(unittest.TestCase):
         config = [
             ['x', ' ', ' '],
             [' ', 'x', 'n'],
+            [' ', 'n', ' ']
+        ]
+        config = TestingTools.config_dict(config)
+        self.validate_config(board, config)
+        self.assertEqual(board.is_valid_configuration(config), False)
+
+    def test_not_enough_bombs2(self):
+        board = Board.create_state(
+            [
+                ['x', 'r', 'r'],
+                ['r', ' ', 'x'],
+                ['r', 'x', 'x']
+            ]
+        )
+        config = [
+            ['x', ' ', ' '],
+            [' ', '?', 'n'],
+            [' ', 'n', ' ']
+        ]
+        config = TestingTools.config_dict(config)
+        self.validate_config(board, config)
+        self.assertEqual(board.is_valid_configuration(config), False)
+
+    def test_more_than_number(self):
+        board = Board.create_state(
+            [
+                ['x', 'r', 'r'],
+                ['r', ' ', 'x'],
+                ['r', 'x', 'x']
+            ]
+        )
+        config = [
+            ['x', ' ', ' '],
+            [' ', 'x', 'n'],
+            [' ', 'x', ' ']
+        ]
+        config = TestingTools.config_dict(config)
+        self.validate_config(board, config)
+        self.assertEqual(board.is_valid_configuration(config), False)
+
+    def test_less_than_number(self):
+        board = Board.create_state(
+            [
+                ['x', 'r', 'r'],
+                ['r', ' ', 'x'],
+                ['r', 'x', ' ']
+            ]
+        )
+        config = [
+            ['x', ' ', ' '],
+            [' ', 'n', 'x'],
             [' ', 'n', ' ']
         ]
         config = TestingTools.config_dict(config)
