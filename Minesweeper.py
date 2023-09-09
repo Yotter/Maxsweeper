@@ -22,14 +22,14 @@ relative_board_length = 950
 #Increase to make margins bigger
 relative_margin_length = 2
 
-use_sample_board = False
+use_sample_board = True
 
-sample = [['x', ' ', ' ', ' ', ' '],
+sample = [[' ', ' ', ' ', ' ', ' '],
 		  [' ', ' ', ' ', ' ', ' '],
 		  [' ', ' ', ' ', ' ', ' '],
-		  [' ', ' ', ' ', 'x', 'x'],
+		  ['x', ' ', ' ', 'x', ' '],
 		  [' ', ' ', ' ', 'x', ' ']]
-first_tile = (1,2)
+first_tile = (0,0)
 
 #Constants:
 if use_sample_board:
@@ -340,7 +340,7 @@ class Board:
 
 		# Check if there are more bombs than the board allows
 		if list(configuration.values()).count(True) > self.bomb_count:
-			print('INVALID: Too many bombs')
+			# print('INVALID: Too many bombs')
 			return False
 
 		# Check if there are less hidden tiles than bombs left
@@ -354,7 +354,7 @@ class Board:
 				elif configuration[tile.coords] == None:
 					potential_bomb_tiles += 1
 		if potential_bomb_tiles < self.bomb_count:
-			print('INVALID: Not enough hidden tiles')
+			# print('INVALID: Not enough hidden tiles')
 			return False
 
 		# Check all numbered tiles
@@ -371,12 +371,12 @@ class Board:
 
 			# Check if any numbered tile has more bombs than its number
 			if bombs_around_tile > tile.num:
-				print('INVALID: Too many bombs around a numbered tile: ' + str(tile.coords))
+				# print('INVALID: Too many bombs around a numbered tile: ' + str(tile.coords))
 				return False
 
 			# Check if any numbered tile has less (bombs + unknown tiles) around it than its number
 			if bombs_around_tile + unknowns_around_tile < tile.num:
-				print('INVALID: Not enough bombs around a numbered tile: ' + str(tile.coords))
+				# print('INVALID: Not enough bombs around a numbered tile: ' + str(tile.coords))
 				return False
 
 		return True

@@ -247,7 +247,7 @@ class ConfigurationsGenerator(unittest.TestCase):
         TestingTools.validate_config(board, config)
         self.assertEqual(board.get_configurations_helper(config), [config])
 
-    def test_dead_end(self):
+    def test_no_solutions(self):
         board = Board.create_state(
             [
                 ['x', 'r', 'r'],
@@ -264,7 +264,7 @@ class ConfigurationsGenerator(unittest.TestCase):
         TestingTools.validate_config(board, config)
         self.assertEqual(board.get_configurations_helper(config), [])
 
-    def test_one_solution(self):
+    def test_one_solution1(self):
         board = Board.create_state(
             [
                 ['x', 'r', 'r'],
@@ -289,6 +289,62 @@ class ConfigurationsGenerator(unittest.TestCase):
             ]
         ))
 
+    def test_one_solution2(self):
+            board = Board.create_state(
+                [
+                    ['x', 'r', 'r'],
+                    ['r', 'x', ' '],
+                    ['r', ' ', ' ']
+                ]
+            )
+            config = [
+                ['?', ' ', ' '],
+                [' ', '?', '?'],
+                [' ', '?', ' ']
+            ]
+            config = TestingTools.config_dict(config)
+            TestingTools.validate_config(board, config)
+            configurations = board.get_configurations_helper(config)
+            self.assertEqual(len(configurations), 1)
+            self.assertEqual(configurations[0], TestingTools.config_dict(
+                [
+                    ['x', ' ', ' '],
+                    [' ', 'x', 'n'],
+                    [' ', 'n', ' ']
+                ]
+            ))
+
+    def test_two_solutions(self):
+        board = Board.create_state(
+            [
+                ['x', 'r', 'r'],
+                ['r', 'x', ' '],
+                ['r', ' ', 'x']
+            ]
+        )
+        config = [
+            ['?', ' ', ' '],
+            [' ', '?', '?'],
+            [' ', '?', ' ']
+        ]
+        config = TestingTools.config_dict(config)
+        TestingTools.validate_config(board, config)
+        configurations = board.get_configurations_helper(config)
+        self.assertEqual(len(configurations), 2)
+        self.assertIn(TestingTools.config_dict(
+            [
+                ['x', ' ', ' '],
+                [' ', 'x', 'n'],
+                [' ', 'n', ' ']
+            ]
+        ), configurations)
+        self.assertIn(TestingTools.config_dict(
+            [
+                ['x', ' ', ' '],
+                [' ', 'n', 'x'],
+                [' ', 'x', ' ']
+            ]
+        ), configurations)
 
 if __name__ == '__main__':
     unittest.main()
