@@ -227,7 +227,7 @@ class ValidConfiguration(unittest.TestCase):
 
 class ConfigurationsGenerator(unittest.TestCase):
     """
-    Tests for board.get_configurations_helper()
+    Tests for board.get_configurations_helper() and board.get_configurations()
     """
 
     def test_base_case(self):
@@ -366,6 +366,37 @@ class ConfigurationsGenerator(unittest.TestCase):
         config = TestingTools.config_dict(config)
         TestingTools.validate_config(board, config)
         configurations = board.get_configurations_helper(config)
+        self.assertEqual(len(configurations), 2)
+        self.assertIn(TestingTools.config_dict(
+            [
+                [' ', ' ', 'x' ,' ', ' '],
+                [' ', ' ', ' ' ,' ', ' '],
+                [' ', ' ', ' ' ,' ', ' '],
+                ['x', 'n', 'n' ,'x', 'n'],
+                [' ', ' ', ' ' ,' ', ' ']
+            ]
+        ), configurations)
+        self.assertIn(TestingTools.config_dict(
+            [
+                [' ', ' ', 'x' ,' ', ' '],
+                [' ', ' ', ' ' ,' ', ' '],
+                [' ', ' ', ' ' ,' ', ' '],
+                ['n', 'x', 'n' ,'n', 'x'],
+                [' ', ' ', ' ' ,' ', ' ']
+            ]
+        ), configurations)
+
+    def test_get_configurations(self):
+        board = Board.create_state(
+            [
+                ['r', 'r', 'x', 'r', 'r'],
+                ['r', 'r', 'r', 'r', 'r'],
+                ['r', 'r', 'r', 'r', 'r'],
+                ['x', ' ', ' ', 'x', ' '],
+                [' ', ' ', ' ', 'x', ' ']
+            ]
+        )
+        configurations = board.get_configurations()
         self.assertEqual(len(configurations), 2)
         self.assertIn(TestingTools.config_dict(
             [

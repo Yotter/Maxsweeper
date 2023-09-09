@@ -244,6 +244,7 @@ class Board:
 		"""
 		# Get all possible configurations of bombs on exposed tiles
 		# Determine which tiles are ALWAYS bombs and which are ALWAYS not bombs, mark them accordingly.
+		# Determine if the number of bombs in each possible state ALWAYS matches the total number of bombs on the board, if so, mark all other tiles as not bombs.
 
 
 
@@ -288,7 +289,7 @@ class Board:
 		# Initialize blank_configuration
 		blank_configuration = {}
 		for tile in exposed_tiles:
-			blank_configuration[tile] = None
+			blank_configuration[tile.coords] = None
 
 		# Call recursive helper function
 		return self.get_configurations_helper(blank_configuration)
