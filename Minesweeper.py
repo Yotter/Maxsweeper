@@ -240,12 +240,37 @@ class Board:
 
 	def solve_state(self):
 		"""
-		Mark every uncovered tile that is definitely a bomb with a flag, uncover every tile that is definitely not a bomb
+		Uncover every tile that is definitely not a bomb given the current board state.
+		@return True if the state changed, False otherwise.
 		"""
+		state_changed = False
 		# Get all possible configurations of bombs on exposed tiles
-		# Determine which tiles are ALWAYS bombs and which are ALWAYS not bombs, mark them accordingly.
-		# Determine if the number of bombs in each possible state ALWAYS matches the total number of bombs on the board, if so, mark all other tiles as not bombs.
+		configurations = self.get_configurations()
 
+		# Determine which tiles are ALWAYS bombs and which are ALWAYS not bombs
+		master_configuration = configurations[0]
+		all_bombs_in_exposed_tiles = True
+		for configuration in configurations[1:]:
+			if list(configuration.values()).count(True) != self.bomb_count:
+				all_bombs_in_exposed_tiles = False
+			for key in configuration:
+				if configuration[key] != master_configuration[key]:
+					master_configuration[key] = None
+
+		# Uncover all tiles that are definitely not bombs
+		for tile, is_bomb in master_configuration.items():
+			x,y = tile
+			if is_bomb == False:
+				state_changed = True
+				self.tiles[y][x].reveal()
+		if all_bombs_in_exposed_tiles:
+			# Uncover all unexposed tiles
+			for tile in self.get_all_tiles():
+				if tile.coords not in master_configuration and not tile.is_revealed: # every config. has exactly the exposed tile coords as keys
+					state_changed = True
+					tile.reveal()
+
+		return state_changed
 
 
 	def get_configurations(self):

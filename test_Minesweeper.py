@@ -417,5 +417,49 @@ class ConfigurationsGenerator(unittest.TestCase):
             ]
         ), configurations)
 
+class SolveState(unittest.TestCase):
+
+    def test_complex_board(self):
+        board = Board.create_state(
+            [
+                ['r', 'r', 'x', 'r', 'r'],
+                ['r', 'r', 'r', 'r', 'r'],
+                ['r', 'r', 'r', 'r', 'r'],
+                ['x', ' ', ' ', 'x', ' '],
+                [' ', ' ', ' ', 'x', ' ']
+            ]
+        )
+        self.assertTrue(board.solve_state())
+        self.assertEqual(sum([1 if tile.is_revealed else 0 for tile in board.get_all_tiles()]), 15)
+        self.assertTrue(board.tiles[3][2].is_revealed)
+
+    def test_unexposed_reveal(self):
+        board = Board.create_state(
+            [
+                ['r', 'r', 'x', 'r', 'r'],
+                ['r', 'r', 'r', 'r', 'r'],
+                ['r', 'r', 'r', 'r', 'r'],
+                ['x', ' ', 'r', 'x', ' '],
+                [' ', ' ', ' ', 'x', ' ']
+            ]
+        )
+        self.assertTrue(board.solve_state())
+        self.assertEqual(sum([1 if tile.is_revealed else 0 for tile in board.get_all_tiles()]), 17)
+        self.assertTrue(board.tiles[4][0].is_revealed)
+        self.assertTrue(board.tiles[4][4].is_revealed)
+
+    def test_no_change(self):
+        board = Board.create_state(
+            [
+                ['r', 'r', 'x', 'r', 'r'],
+                ['r', 'r', 'r', 'r', 'r'],
+                ['r', 'r', 'r', 'r', 'r'],
+                ['x', ' ', 'r', 'x', ' '],
+                ['r', 'r', 'r', 'x', 'r']
+            ]
+        )
+        self.assertFalse(board.solve_state())
+        self.assertEqual(sum([0 if tile.is_revealed else 1 for tile in board.get_all_tiles()]), 6)
+
 if __name__ == '__main__':
     unittest.main()
