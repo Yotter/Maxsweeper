@@ -30,6 +30,7 @@ class TestingTools:
         return config
 
     @staticmethod
+    # TODO: delete this if it is still unused
     def config_mtrx(config_dict):
         """
         Create a more readable matrix from a config dictionary
@@ -72,158 +73,161 @@ class ValidConfiguration(unittest.TestCase):
     Tests for Board.is_valid_configuration()
     """
 
+    def generic_test(self, board_mtrx, config_mtrx, expected_result: bool):
+        """
+        Validate the config using the right tiles and perform test
+        @param board_mtrx list[list] 2d array that represents a board and its current state:
+            - 'x': bomb
+			- 'r': revealed tile
+			- (other): unrevealed tile
+
+        @param config_mtrx list[list] 2d array that represents a config to validate:
+            - 'x': bomb
+            - 'n': not a bomb
+            - '?': unknown tile
+            - ' ': not in config
+
+        @param expected_result bool expected output of is_valid_configuration()
+        """
+        board = Board.create_state(board_mtrx)
+        config = TestingTools.config_dict(config_mtrx)
+        TestingTools.validate_config(board, config)
+        self.assertEqual(board.is_valid_configuration(config), expected_result)
+
     def test_too_many_bombs(self):
-        board = Board.create_state(
-            [
+        self.generic_test(
+            board_mtrx=[
                 ['x', 'r', 'r'],
                 ['r', 'x', ' '],
                 ['r', ' ', ' ']
-            ]
+            ],
+            config_mtrx=[
+                ['x', ' ', ' '],
+                [' ', 'n', 'x'],
+                [' ', 'x', ' ']
+            ],
+            expected_result=False
         )
-        config = [
-            ['x', ' ', ' '],
-            [' ', 'n', 'x'],
-            [' ', 'x', ' ']
-        ]
-        config = TestingTools.config_dict(config)
-        TestingTools.validate_config(board, config)
-        self.assertEqual(board.is_valid_configuration(config), False)
 
     def test_not_enough_bombs1(self):
-        board = Board.create_state(
-            [
+        self.generic_test(
+            board_mtrx=[
                 ['x', 'r', 'r'],
                 ['r', ' ', 'x'],
                 ['r', 'x', 'x']
-            ]
+            ],
+            config_mtrx=[
+                ['x', ' ', ' '],
+                [' ', 'x', 'n'],
+                [' ', 'n', ' ']
+            ],
+            expected_result=False
         )
-        config = [
-            ['x', ' ', ' '],
-            [' ', 'x', 'n'],
-            [' ', 'n', ' ']
-        ]
-        config = TestingTools.config_dict(config)
-        TestingTools.validate_config(board, config)
-        self.assertEqual(board.is_valid_configuration(config), False)
 
     def test_not_enough_bombs2(self):
-        board = Board.create_state(
-            [
+        self.generic_test(
+            board_mtrx=[
                 ['x', 'r', 'r'],
                 ['r', ' ', 'x'],
                 ['r', 'x', 'x']
-            ]
+            ],
+            config_mtrx=[
+                ['x', ' ', ' '],
+                [' ', '?', 'n'],
+                [' ', 'n', ' ']
+            ],
+            expected_result=False
         )
-        config = [
-            ['x', ' ', ' '],
-            [' ', '?', 'n'],
-            [' ', 'n', ' ']
-        ]
-        config = TestingTools.config_dict(config)
-        TestingTools.validate_config(board, config)
-        self.assertEqual(board.is_valid_configuration(config), False)
 
     def test_more_than_number(self):
-        board = Board.create_state(
-            [
+        self.generic_test(
+            board_mtrx=[
                 ['x', 'r', 'r'],
                 ['r', ' ', 'x'],
                 ['r', 'x', 'x']
-            ]
+            ],
+            config_mtrx=[
+                ['x', ' ', ' '],
+                [' ', 'x', 'n'],
+                [' ', 'x', ' ']
+            ],
+            expected_result=False
         )
-        config = [
-            ['x', ' ', ' '],
-            [' ', 'x', 'n'],
-            [' ', 'x', ' ']
-        ]
-        config = TestingTools.config_dict(config)
-        TestingTools.validate_config(board, config)
-        self.assertEqual(board.is_valid_configuration(config), False)
 
     def test_less_than_number(self):
-        board = Board.create_state(
-            [
+        self.generic_test(
+            board_mtrx=[
                 ['x', 'r', 'r'],
                 ['r', ' ', 'x'],
                 ['r', 'x', ' ']
-            ]
+            ],
+            config_mtrx=[
+                ['x', ' ', ' '],
+                [' ', 'n', 'x'],
+                [' ', 'n', ' ']
+            ],
+            expected_result=False
         )
-        config = [
-            ['x', ' ', ' '],
-            [' ', 'n', 'x'],
-            [' ', 'n', ' ']
-        ]
-        config = TestingTools.config_dict(config)
-        TestingTools.validate_config(board, config)
-        self.assertEqual(board.is_valid_configuration(config), False)
 
     def test_valid_config1(self):
-        board = Board.create_state(
-            [
+        self.generic_test(
+            board_mtrx=[
                 ['x', 'r', 'r'],
                 ['r', ' ', 'x'],
                 ['r', 'x', 'x']
-            ]
+            ],
+            config_mtrx=[
+                ['x', ' ', ' '],
+                [' ', 'x', '?'],
+                [' ', 'n', ' ']
+            ],
+            expected_result=True
         )
-        config = [
-            ['x', ' ', ' '],
-            [' ', 'x', '?'],
-            [' ', 'n', ' ']
-        ]
-        config = TestingTools.config_dict(config)
-        TestingTools.validate_config(board, config)
-        self.assertEqual(board.is_valid_configuration(config), True)
 
     def test_valid_config2(self):
-        board = Board.create_state(
-            [
+        self.generic_test(
+            board_mtrx=[
                 ['x', 'r', 'r'],
                 ['r', ' ', 'x'],
                 ['r', 'x', 'x']
-            ]
+            ],
+            config_mtrx=[
+                ['?', ' ', ' '],
+                [' ', '?', '?'],
+                [' ', '?', ' ']
+            ],
+            expected_result=True
         )
-        config = [
-            ['?', ' ', ' '],
-            [' ', '?', '?'],
-            [' ', '?', ' ']
-        ]
-        config = TestingTools.config_dict(config)
-        TestingTools.validate_config(board, config)
-        self.assertEqual(board.is_valid_configuration(config), True)
 
     def test_valid_config3(self):
-        board = Board.create_state(
-            [
+        self.generic_test(
+            board_mtrx=[
                 ['r', 'r', 'r'],
                 ['r', 'x', 'r'],
                 ['r', 'r', 'r']
-            ]
+            ],
+            config_mtrx=[
+                [' ', ' ', ' '],
+                [' ', 'x', ' '],
+                [' ', ' ', ' ']
+            ],
+            expected_result=True
         )
-        config = [
-            [' ', ' ', ' '],
-            [' ', 'x', ' '],
-            [' ', ' ', ' ']
-        ]
-        config = TestingTools.config_dict(config)
-        TestingTools.validate_config(board, config)
-        self.assertEqual(board.is_valid_configuration(config), True)
 
     def test_valid_config4(self):
-        board = Board.create_state(
-            [
+        self.generic_test(
+            board_mtrx=[
                 ['r', 'r', 'r'],
                 ['r', 'x', 'r'],
                 ['r', 'r', 'r']
-            ]
+            ],
+            config_mtrx=[
+                [' ', ' ', ' '],
+                [' ', '?', ' '],
+                [' ', ' ', ' ']
+            ],
+            expected_result=True
         )
-        config = [
-            [' ', ' ', ' '],
-            [' ', '?', ' '],
-            [' ', ' ', ' ']
-        ]
-        config = TestingTools.config_dict(config)
-        TestingTools.validate_config(board, config)
-        self.assertEqual(board.is_valid_configuration(config), True)
 
 class ConfigurationsGenerator(unittest.TestCase):
     """
