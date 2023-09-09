@@ -422,7 +422,9 @@ class ConfigurationsGenerator(unittest.TestCase):
         ), configurations)
 
 class SolveState(unittest.TestCase):
-
+    """
+    Tests for Board.solve_state()
+    """
     def test_complex_board(self):
         board = Board.create_state(
             [
@@ -464,6 +466,61 @@ class SolveState(unittest.TestCase):
         )
         self.assertFalse(board.solve_state())
         self.assertEqual(sum([0 if tile.is_revealed else 1 for tile in board.get_all_tiles()]), 6)
+
+class Solve(unittest.TestCase):
+    """
+    Tests for Board.is_solvable()
+    """
+
+    def test_simple_board1(self):
+        board = Board.create_custom_board(
+            [
+                ['x', 'x', ' '],
+                [' ', ' ', 'x'],
+                [' ', ' ', 'x']
+            ], (0, 2)
+        )
+        self.assertTrue(board.is_solvable())
+        self.assertFalse(board.tiles[0][2].is_revealed)
+
+    def test_simple_board2(self):
+        board = Board.create_custom_board(
+            [
+                ['x', ' ', ' '],
+                [' ', ' ', 'x'],
+                [' ', ' ', 'x']
+            ], (0, 2)
+        )
+        self.assertTrue(board.is_solvable())
+        self.assertFalse(board.tiles[0][1].is_revealed)
+        self.assertFalse(board.tiles[0][2].is_revealed)
+
+    def test_complex_board1(self):
+        board = Board.create_custom_board(
+            [
+                [' ', ' ', ' ', ' ', ' '],
+                [' ', ' ', ' ', ' ', ' '],
+                ['x', ' ', ' ', 'x', ' '],
+                [' ', ' ', ' ', 'x', ' ']
+            ], (0,0)
+        )
+        self.assertFalse(board.is_solvable())
+        self.assertEqual(sum([1 if tile.is_revealed else 0 for tile in board.get_all_tiles()]), 10)
+
+    def test_complex_board2(self):
+        board = Board.create_custom_board(
+            [
+                [' ', ' ', ' ', ' ', ' ', ' '],
+                [' ', ' ', ' ', ' ', ' ', 'x'],
+                ['x', ' ', ' ', 'x', ' ', ' '],
+                [' ', ' ', ' ', 'x', ' ', ' ']
+            ], (0,0)
+        )
+        self.assertTrue(board.is_solvable())
+        self.assertEqual(sum([1 if tile.is_revealed else 0 for tile in board.get_all_tiles()]), 10)
+
+    def massive_board1(self):
+
 
 if __name__ == '__main__':
     unittest.main()

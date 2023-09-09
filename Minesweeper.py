@@ -22,13 +22,12 @@ relative_board_length = 950
 #Increase to make margins bigger
 relative_margin_length = 2
 
-use_sample_board = True
+use_sample_board = False
 
-sample = [[' ', ' ', ' ', ' ', ' '],
-		  [' ', ' ', ' ', ' ', ' '],
-		  [' ', ' ', ' ', ' ', ' '],
-		  ['x', ' ', ' ', 'x', ' '],
-		  [' ', ' ', ' ', 'x', ' ']]
+sample = [[' ', ' ', ' ', ' ', ' ', ' '],
+		  [' ', ' ', ' ', ' ', ' ', 'x'],
+		  ['x', ' ', ' ', 'x', ' ', ' '],
+		  [' ', ' ', ' ', 'x', ' ', ' ']]
 first_tile = (0,0)
 
 #Constants:
@@ -231,17 +230,45 @@ class Board:
 								exposed_tiles.append(tile)
 		return exposed_tiles
 
-	def solve(self):
+	def reset(self):
+		"""
+		Reset the board to its initial state (after the first tile is revealed)
+		"""
+		for tile in self.get_all_tiles():
+			tile.is_flagged = False
+			tile.is_revealed = False
+			tile.is_found = False
+			tile.needs_update = False
+		self.nummed_tiles = []
+		self.win = False
+		self.lose = False
+		self.pre_reveal = True
+		self.tiles[first_tile[1]][first_tile[0]].reveal()
+		self.pre_reveal = False
+
+
+	def is_solvable(self):
 		"""
 		@return True if the board is could be solved, False if it is not solvable.
 		"""
 		# Solve each state
+		while self.solve_state():
+			pass
+
 		# Check for win or stuck
+		solved = False
+		unrevealed_tile_count = sum([0 if tile.is_revealed else 1 for tile in self.get_all_tiles()])
+		if unrevealed_tile_count == self.bomb_count:
+			solved = True
+
+		self.reset()
+		return solved
 
 	def solve_state(self):
 		"""
 		Uncover every tile that is definitely not a bomb given the current board state.
 		@return True if the state changed, False otherwise.
+		@changes self.tiles
 		"""
 		state_changed = False
 		# Get all possible configurations of bombs on exposed tiles
@@ -417,7 +444,6 @@ class Tile:
 		self.is_flagged = False
 		self.is_revealed = False
 		self.is_found = False
-		self.is_winning = False
 		self.needs_update = True
 		self.x = coords[0]
 		self.y = coords[1]
@@ -501,10 +527,17 @@ class Tile:
 	def first_reveal(self):
 		"""A function for when the user first reveals a tile.
 		This makes sure that it opens something up right off the bat."""
-		self.board.add_bombs(bomb_percentage, self)                     
-		#self.board.add_bombs_custom(sample) #For testing with a custom board
+		self.board.add_bombs(bomb_percentage, self)
 		self.reveal()
 		self.board.pre_reveal = False
+
+		# DEV
+		bomb_array = [["x" if self.board.tiles[y][x].is_bomb else ' ' for x in range(self.board.width)] for y in range(self.board.height)]
+		print('First tile revealed at ' + str(self.coords))
+		print("Bomb array: ")
+		for row in bomb_array:
+			print(row)
+		# END DEV
 		if __name__ == '__main__':
 			timer.start()
 
