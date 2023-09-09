@@ -346,5 +346,45 @@ class ConfigurationsGenerator(unittest.TestCase):
             ]
         ), configurations)
 
+    def test_complex_board(self):
+        board = Board.create_state(
+            [
+                ['r', 'r', 'x', 'r', 'r'],
+                ['r', 'r', 'r', 'r', 'r'],
+                ['r', 'r', 'r', 'r', 'r'],
+                ['x', ' ', ' ', 'x', ' '],
+                [' ', ' ', ' ', 'x', ' ']
+            ]
+        )
+        config = [
+            [' ', ' ', '?' ,' ', ' '],
+            [' ', ' ', ' ' ,' ', ' '],
+            [' ', ' ', ' ' ,' ', ' '],
+            ['?', '?', '?' ,'?', '?'],
+            [' ', ' ', ' ' ,' ', ' ']
+        ]
+        config = TestingTools.config_dict(config)
+        TestingTools.validate_config(board, config)
+        configurations = board.get_configurations_helper(config)
+        self.assertEqual(len(configurations), 2)
+        self.assertIn(TestingTools.config_dict(
+            [
+                [' ', ' ', 'x' ,' ', ' '],
+                [' ', ' ', ' ' ,' ', ' '],
+                [' ', ' ', ' ' ,' ', ' '],
+                ['x', 'n', 'n' ,'x', 'n'],
+                [' ', ' ', ' ' ,' ', ' ']
+            ]
+        ), configurations)
+        self.assertIn(TestingTools.config_dict(
+            [
+                [' ', ' ', 'x' ,' ', ' '],
+                [' ', ' ', ' ' ,' ', ' '],
+                [' ', ' ', ' ' ,' ', ' '],
+                ['n', 'x', 'n' ,'n', 'x'],
+                [' ', ' ', ' ' ,' ', ' ']
+            ]
+        ), configurations)
+
 if __name__ == '__main__':
     unittest.main()
