@@ -22,21 +22,29 @@ relative_board_length = 950
 #Increase to make margins bigger
 relative_margin_length = 2
 
-use_sample_board = False
+use_sample_board = True
 
-sample = [[' ', ' ', ' ', ' ', ' ', ' '],
-		  [' ', ' ', ' ', ' ', ' ', 'x'],
-		  ['x', ' ', ' ', 'x', ' ', ' '],
-		  [' ', ' ', ' ', 'x', ' ', ' ']]
-first_tile = (0,0)
+sample = [
+	[' ', ' ', 'x', ' ', 'x', ' ', ' ', 'x', 'x', ' '] ,
+	[' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' '] ,
+	[' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' '] ,
+	[' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '] ,
+	['x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '] ,
+	[' ', 'x', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' '] ,
+	[' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' '] ,
+	[' ', ' ', ' ', 'x', ' ', ' ', 'x', 'x', ' ', ' '] ,
+	[' ', ' ', ' ', ' ', 'x', ' ', 'x', 'x', ' ', ' '] ,
+	['x', 'x', ' ', ' ', 'x', ' ', ' ', 'x', ' ', ' '] ,
+]
+first_tile = (4, 4)
 
 #Constants:
 if use_sample_board:
 	board_width = len(sample[0])
 	board_height = len(sample)
 else:
-	board_width = 30
-	board_height = 16
+	board_width = 10
+	board_height = 10
 bomb_percentage = 20.75
 
 
@@ -129,11 +137,15 @@ class Board:
 
 			- 'x': bomb
 			- 'r': revealed tile
+			- 'f': flagged tile that is not a bomb
+			- 'F': flagged tile that is a bomb
 			- (other): unrevealed tile
 
 		@param first_tile (optional): tuple of coordinates of the first tile to be revealed, if None, the first tile is the first r tile found
 		@return Board object
 		"""
+
+		# Determine the first tile
 		if first_tile == None:
 			for y, row in enumerate(matrix):
 				if first_tile != None:
@@ -145,11 +157,43 @@ class Board:
 		if first_tile == None:
 			raise ValueError('No first tile provided to function and no revealed tiles found in matrix')
 
-		board = Board.create_custom_board(matrix, first_tile) # non 'x' characters are treated as non-bombs
+		# Create the board and set state
+		bomb_array = [['x' if matrix[y][x] == 'x' or matrix[y][x] == 'F' else '' for x in range(len(matrix[y]))] for y in range(len(matrix))]
+		board = Board.create_custom_board(bomb_array, first_tile)
 		for tile in board.get_all_tiles():
 			if matrix[tile.coords[1]][tile.coords[0]] == 'r':
 				tile.reveal()
+			elif matrix[tile.coords[1]][tile.coords[0]].lower() == 'f':
+				tile.is_flagged = True
 		return board
+	
+	def get_state(self):
+		"""
+		Return a matrix (2d array) of characters representing the current state of the board:
+
+			- 'x': bomb
+			- 'r': revealed tile
+			- 'f': flagged tile that is not a bomb
+			- 'F': flagged tile that is a bomb
+			- ' ': unrevealed tile
+		"""
+		state = []
+		for row in self.tiles:
+			state.append([])
+			for tile in row:
+				if tile.is_revealed:
+					state[-1].append('r')
+				elif tile.is_bomb:
+					if tile.is_flagged:
+						state[-1].append('F')
+					else:
+						state[-1].append('x')
+				elif tile.is_flagged:
+					state[-1].append('f')
+				else:
+					state[-1].append(' ')
+		return state
+
 
 	def get_all_tiles(self):
 		"""Return a list of all tiles on the board."""
@@ -273,6 +317,11 @@ class Board:
 		state_changed = False
 		# Get all possible configurations of bombs on exposed tiles
 		configurations = self.get_configurations()
+		print(len(configurations), "configurations found")
+		for tile in self.get_all_tiles():
+			tile.is_green = False
+			tile.is_red = False
+			tile.needs_update = True
 
 		# Determine which tiles are ALWAYS bombs and which are ALWAYS not bombs
 		master_configuration = configurations[0]
@@ -344,16 +393,32 @@ class Board:
 			blank_configuration[tile.coords] = None
 
 		# Call recursive helper function
-		return self.get_configurations_helper(blank_configuration)
+		return self.get_configurations_helper(blank_configuration, depth=0)
 
-	def get_configurations_helper(self, configuration):
+	def get_configurations_helper(self, configuration, depth=0):
 		"""Helper function for get_configurations that will be called recursively.
 		@param configuration: A base configuration dictionary with the keys being the exposed tiles and the values being either True or False or None.
 			- True: The tile is a bomb
 			- False: The tile is not a bomb
 			- None: The tile has not been assigned a value yet.
 		@return a list of all *possible* configurations."""
-
+		#DEV
+		for tile, value in configuration.items():
+			if value == True:
+				self.tiles[tile[1]][tile[0]].is_red = True
+				self.tiles[tile[1]][tile[0]].is_green = False
+			elif value == False:
+				self.tiles[tile[1]][tile[0]].is_green = True
+				self.tiles[tile[1]][tile[0]].is_red = False
+			else:
+				self.tiles[tile[1]][tile[0]].is_green = False
+				self.tiles[tile[1]][tile[0]].is_red = False
+			self.tiles[tile[1]][tile[0]].needs_update = True
+		board.draw()
+		pg.display.update()
+		clock.tick()
+		# print(" " * depth, depth)
+		#END DEV
 		# Base case
 		if None not in configuration.values():
 			return [configuration]
@@ -370,13 +435,13 @@ class Board:
 		configuration_copy_1 = configuration.copy()
 		configuration_copy_1[key] = True
 		if self.is_valid_configuration(configuration_copy_1):
-			configurations += self.get_configurations_helper(configuration_copy_1)
+			configurations += self.get_configurations_helper(configuration_copy_1, depth=depth + 1)
 
 		# Add a configuration with the key being False if it is a valid configuration
 		configuration_copy_2 = configuration.copy()
 		configuration_copy_2[key] = False
 		if self.is_valid_configuration(configuration_copy_2):
-			configurations += self.get_configurations_helper(configuration_copy_2)
+			configurations += self.get_configurations_helper(configuration_copy_2, depth=depth + 1)
 
 		return configurations
 	
@@ -445,6 +510,8 @@ class Tile:
 		self.is_revealed = False
 		self.is_found = False
 		self.needs_update = True
+		self.is_green = False # REMOVE THESE
+		self.is_red = False
 		self.x = coords[0]
 		self.y = coords[1]
 
@@ -466,7 +533,10 @@ class Tile:
 				color = dark_grey
 		elif self.board.lose and self.is_bomb:
 			color = black
-
+		elif self.is_green:
+			color = dark_green
+		elif self.is_red:
+			color = red
 		else:
 			color = grey
 		pg.draw.rect(screen, color, (x,y, tile_length, tile_length))
@@ -536,7 +606,7 @@ class Tile:
 		print('First tile revealed at ' + str(self.coords))
 		print("Bomb array: ")
 		for row in bomb_array:
-			print(row)
+			print(row, ",")
 		# END DEV
 		if __name__ == '__main__':
 			timer.start()
@@ -651,6 +721,27 @@ def main():
 	else:
 		board = Board(board_width, board_height)
 
+	# board = Board.create_state(
+	# 	[
+	# 		['r', 'r', 'r', 'r', 'r', 'F', 'F', 'r', 'r', 'r', 'r', 'F', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' '] ,
+	# 		['r', 'r', 'r', 'r', 'r', 'F', 'r', 'F', 'r', 'F', 'r', 'r', 'r', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' '] ,
+	# 		['F', 'r', 'F', 'F', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'F', 'r', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' '] ,
+	# 		['r', 'r', 'F', 'r', 'r', 'r', 'r', 'r', 'F', 'F', 'r', 'r', 'F', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', 'x', 'x', ' ', 'x', ' ', ' '] ,
+	# 		['r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'F', 'r', 'F', 'r', 'r', 'x', ' ', 'x', ' ', ' ', 'x', ' ', 'x', 'x', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' '] ,
+	# 		['r', 'r', 'r', 'F', 'F', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' '] ,
+	# 		['r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'F', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '] ,
+	# 		['r', 'F', 'F', 'r', 'r', 'r', 'r', 'F', 'r', 'r', 'r', 'r', 'r', 'x', 'x', ' ', ' ', ' ', ' ', 'x', 'x', ' ', ' ', 'x', ' ', ' ', 'x', ' ', 'x', ' '] ,
+	# 		[' ', 'x', 'r', 'r', 'r', 'r', 'F', 'r', 'r', 'r', 'F', 'r', 'r', ' ', ' ', 'x', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', 'x', ' ', 'x', ' ', ' ', ' '] ,
+	# 		['x', ' ', 'F', 'F', 'r', 'r', 'F', 'r', 'r', 'r', 'F', ' ', 'x', 'F', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '] ,
+	# 		[' ', ' ', ' ', 'F', 'F', 'r', 'r', 'r', 'r', 'r', 'r', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', 'x', 'x', ' ', 'x', ' '] ,
+	# 		[' ', ' ', 'x', 'r', 'r', 'r', 'F', 'F', 'r', 'r', 'r', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', 'x', ' ', 'x', ' '] ,
+	# 		['x', ' ', 'x', 'r', ' ', 'x', 'F', 'F', 'r', 'r', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', 'x', ' ', ' ', ' ', ' ', ' ', 'x', ' ', 'x', ' '] ,
+	# 		[' ', ' ', 'x', ' ', ' ', ' ', 'x', 'r', 'r', 'r', 'r', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', 'x', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '] ,
+	# 		[' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', 'x', ' ', ' ', ' ', 'x', ' ', ' ', 'x', ' ', ' ', ' ', 'x', 'x', ' ', 'x', ' ', ' '] ,
+	# 		[' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' '] ,
+	# 	]
+	# )
+
 	screen.fill(white)
 
 	locked = True
@@ -666,12 +757,14 @@ def main():
 					locked = False
 				elif event.key == pg.K_r:
 					main()
-				elif event.key == pg.K_f:
-					# TEMPORARY
-					exposed_tiles = board.get_exposed_tiles()
-					for tile in exposed_tiles:
-						tile.activate(button=3)
-					print(Board.make_dict_with_null_values(exposed_tiles))
+				elif event.key == pg.K_p:
+					# Print out the current board state matrix
+					state = board.get_state()
+					print('Current board state:')
+					for row in state:
+						print(row, ',')
+				elif event.key == pg.K_s:
+					print(board.solve_state())
 		board.draw()
 		pg.display.update()
 		if board.win:
