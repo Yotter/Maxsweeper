@@ -519,8 +519,23 @@ class Solve(unittest.TestCase):
         self.assertTrue(board.is_solvable())
         self.assertEqual(sum([1 if tile.is_revealed else 0 for tile in board.get_all_tiles()]), 10)
 
-    def massive_board1(self):
-        pass
+    def test_big_board1(self):
+        board = Board.create_custom_board(
+            [
+                [' ', ' ', 'x', ' ', 'x', ' ', ' ', 'x', 'x', ' '] ,
+                [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' '] ,
+                [' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' '] ,
+                [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '] ,
+                ['x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '] ,
+                [' ', 'x', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' '] ,
+                [' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' '] ,
+                [' ', ' ', ' ', 'x', ' ', ' ', 'x', 'x', ' ', ' '] ,
+                [' ', ' ', ' ', ' ', 'x', ' ', 'x', 'x', ' ', ' '] ,
+                ['x', 'x', ' ', ' ', 'x', ' ', ' ', 'x', ' ', ' '] ,
+            ], (4,4)
+        )
+        self.assertTrue(board.is_solvable())
+
 
 if __name__ == '__main__':
     unittest.main()
