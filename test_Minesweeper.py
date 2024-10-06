@@ -520,7 +520,7 @@ class Solve(unittest.TestCase):
         self.assertEqual(sum([1 if tile.is_revealed else 0 for tile in board.get_all_tiles()]), 10)
 
     def massive_board1(self):
-
+        pass
 
 if __name__ == '__main__':
     unittest.main()

@@ -107,9 +107,12 @@ class Board:
 	@staticmethod
 	def create_custom_board(bomb_array, first_tile):
 		"""Create a board from an array of either "x"s or "" with "x" 
-		representing a bomb and "" representing... not a bomb AND a tile
-		that represents the first place a user clicks. This tile will
-		be revealed immediately"""
+		representing a bomb and anything else representing... not a bomb
+
+		AND
+
+		a tile that represents the first place a user clicks. This tile will
+		be revealed immediately."""
 
 		# Create board
 		board = Board(len(bomb_array[0]), len(bomb_array))
@@ -130,6 +133,7 @@ class Board:
 
 		return board
 
+	@staticmethod
 	def create_state(matrix, first_tile=None):
 		"""
 		Create a board at a particular state given a matrix (2d array) of characters and a mandatory first tile.
@@ -166,7 +170,7 @@ class Board:
 			elif matrix[tile.coords[1]][tile.coords[0]].lower() == 'f':
 				tile.is_flagged = True
 		return board
-	
+
 	def get_state(self):
 		"""
 		Return a matrix (2d array) of characters representing the current state of the board:
@@ -287,7 +291,7 @@ class Board:
 		self.win = False
 		self.lose = False
 		self.pre_reveal = True
-		self.tiles[first_tile[1]][first_tile[0]].reveal()
+		self.tiles[self.first_tile[1]][self.first_tile[0]].reveal()
 		self.pre_reveal = False
 
 
@@ -317,11 +321,6 @@ class Board:
 		state_changed = False
 		# Get all possible configurations of bombs on exposed tiles
 		configurations = self.get_configurations()
-		print(len(configurations), "configurations found")
-		for tile in self.get_all_tiles():
-			tile.is_green = False
-			tile.is_red = False
-			tile.needs_update = True
 
 		# Determine which tiles are ALWAYS bombs and which are ALWAYS not bombs
 		master_configuration = configurations[0]
@@ -402,23 +401,6 @@ class Board:
 			- False: The tile is not a bomb
 			- None: The tile has not been assigned a value yet.
 		@return a list of all *possible* configurations."""
-		#DEV
-		for tile, value in configuration.items():
-			if value == True:
-				self.tiles[tile[1]][tile[0]].is_red = True
-				self.tiles[tile[1]][tile[0]].is_green = False
-			elif value == False:
-				self.tiles[tile[1]][tile[0]].is_green = True
-				self.tiles[tile[1]][tile[0]].is_red = False
-			else:
-				self.tiles[tile[1]][tile[0]].is_green = False
-				self.tiles[tile[1]][tile[0]].is_red = False
-			self.tiles[tile[1]][tile[0]].needs_update = True
-		board.draw()
-		pg.display.update()
-		clock.tick()
-		# print(" " * depth, depth)
-		#END DEV
 		# Base case
 		if None not in configuration.values():
 			return [configuration]
@@ -435,13 +417,13 @@ class Board:
 		configuration_copy_1 = configuration.copy()
 		configuration_copy_1[key] = True
 		if self.is_valid_configuration(configuration_copy_1):
-			configurations += self.get_configurations_helper(configuration_copy_1, depth=depth + 1)
+			configurations += self.get_configurations_helper(configuration_copy_1, depth=depth+1)
 
 		# Add a configuration with the key being False if it is a valid configuration
 		configuration_copy_2 = configuration.copy()
 		configuration_copy_2[key] = False
 		if self.is_valid_configuration(configuration_copy_2):
-			configurations += self.get_configurations_helper(configuration_copy_2, depth=depth + 1)
+			configurations += self.get_configurations_helper(configuration_copy_2, depth=depth+1)
 
 		return configurations
 	
@@ -510,8 +492,6 @@ class Tile:
 		self.is_revealed = False
 		self.is_found = False
 		self.needs_update = True
-		self.is_green = False # REMOVE THESE
-		self.is_red = False
 		self.x = coords[0]
 		self.y = coords[1]
 
@@ -533,10 +513,6 @@ class Tile:
 				color = dark_grey
 		elif self.board.lose and self.is_bomb:
 			color = black
-		elif self.is_green:
-			color = dark_green
-		elif self.is_red:
-			color = red
 		else:
 			color = grey
 		pg.draw.rect(screen, color, (x,y, tile_length, tile_length))
@@ -720,27 +696,6 @@ def main():
 		board = Board.create_custom_board(sample, first_tile)
 	else:
 		board = Board(board_width, board_height)
-
-	# board = Board.create_state(
-	# 	[
-	# 		['r', 'r', 'r', 'r', 'r', 'F', 'F', 'r', 'r', 'r', 'r', 'F', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' '] ,
-	# 		['r', 'r', 'r', 'r', 'r', 'F', 'r', 'F', 'r', 'F', 'r', 'r', 'r', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' '] ,
-	# 		['F', 'r', 'F', 'F', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'F', 'r', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' '] ,
-	# 		['r', 'r', 'F', 'r', 'r', 'r', 'r', 'r', 'F', 'F', 'r', 'r', 'F', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', 'x', 'x', ' ', 'x', ' ', ' '] ,
-	# 		['r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'F', 'r', 'F', 'r', 'r', 'x', ' ', 'x', ' ', ' ', 'x', ' ', 'x', 'x', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' '] ,
-	# 		['r', 'r', 'r', 'F', 'F', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' '] ,
-	# 		['r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'F', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '] ,
-	# 		['r', 'F', 'F', 'r', 'r', 'r', 'r', 'F', 'r', 'r', 'r', 'r', 'r', 'x', 'x', ' ', ' ', ' ', ' ', 'x', 'x', ' ', ' ', 'x', ' ', ' ', 'x', ' ', 'x', ' '] ,
-	# 		[' ', 'x', 'r', 'r', 'r', 'r', 'F', 'r', 'r', 'r', 'F', 'r', 'r', ' ', ' ', 'x', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', 'x', ' ', 'x', ' ', ' ', ' '] ,
-	# 		['x', ' ', 'F', 'F', 'r', 'r', 'F', 'r', 'r', 'r', 'F', ' ', 'x', 'F', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '] ,
-	# 		[' ', ' ', ' ', 'F', 'F', 'r', 'r', 'r', 'r', 'r', 'r', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', 'x', 'x', ' ', 'x', ' '] ,
-	# 		[' ', ' ', 'x', 'r', 'r', 'r', 'F', 'F', 'r', 'r', 'r', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', 'x', ' ', 'x', ' '] ,
-	# 		['x', ' ', 'x', 'r', ' ', 'x', 'F', 'F', 'r', 'r', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', 'x', ' ', ' ', ' ', ' ', ' ', 'x', ' ', 'x', ' '] ,
-	# 		[' ', ' ', 'x', ' ', ' ', ' ', 'x', 'r', 'r', 'r', 'r', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', 'x', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '] ,
-	# 		[' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', 'x', ' ', ' ', ' ', 'x', ' ', ' ', 'x', ' ', ' ', ' ', 'x', 'x', ' ', 'x', ' ', ' '] ,
-	# 		[' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' '] ,
-	# 	]
-	# )
 
 	screen.fill(white)
 
