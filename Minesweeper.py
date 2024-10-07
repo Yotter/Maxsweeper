@@ -324,7 +324,7 @@ class Board:
 
 		# Determine which tiles are ALWAYS bombs and which are ALWAYS not bombs
 		master_configuration = configurations[0]
-		all_bombs_in_exposed_tiles = True
+		all_bombs_in_exposed_tiles = list(master_configuration.values()).count(True) == self.bomb_count
 		for configuration in configurations[1:]:
 			if list(configuration.values()).count(True) != self.bomb_count:
 				all_bombs_in_exposed_tiles = False
