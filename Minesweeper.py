@@ -321,6 +321,10 @@ class Board:
 		state_changed = False
 		# Get all possible configurations of bombs on exposed tiles
 		configurations = self.get_configurations()
+		for tile in self.get_all_tiles():
+			tile.is_bomb_in_config = False
+			tile.is_non_bomb_in_config = False
+			tile.needs_update = True
 
 		# Determine which tiles are ALWAYS bombs and which are ALWAYS not bombs
 		master_configuration = configurations[0]
@@ -401,6 +405,24 @@ class Board:
 			- False: The tile is not a bomb
 			- None: The tile has not been assigned a value yet.
 		@return a list of all *possible* configurations."""
+
+		# Draw (unless testing)
+		if __name__ == "__main__":
+			for tile, value in configuration.items():
+				if value == True:
+					self.tiles[tile[1]][tile[0]].is_bomb_in_config = True
+					self.tiles[tile[1]][tile[0]].is_non_bomb_in_config = False
+				elif value == False:
+					self.tiles[tile[1]][tile[0]].is_non_bomb_in_config = True
+					self.tiles[tile[1]][tile[0]].is_bomb_in_config = False
+				else:
+					self.tiles[tile[1]][tile[0]].is_non_bomb_in_config = False
+					self.tiles[tile[1]][tile[0]].is_bomb_in_config = False
+				self.tiles[tile[1]][tile[0]].needs_update = True
+			board.draw()
+			pg.display.update()
+			clock.tick()
+
 		# Base case
 		if None not in configuration.values():
 			return [configuration]
@@ -491,6 +513,15 @@ class Tile:
 		self.is_flagged = False
 		self.is_revealed = False
 		self.is_found = False
+
+		# The below two flags are for visualizing the solving process.
+		# They will be set to True when this tile is being considered as a bomb in the
+		# currently displayed config or when it is being considered as a non-bomb in the
+		# currently displayed config, respectively. If the tile is not in the current config,
+		# both flags are set to False.
+		self.is_bomb_in_config = False
+		self.is_non_bomb_in_config = False
+
 		self.needs_update = True
 		self.x = coords[0]
 		self.y = coords[1]
@@ -513,6 +544,10 @@ class Tile:
 				color = dark_grey
 		elif self.board.lose and self.is_bomb:
 			color = black
+		elif self.is_bomb_in_config:
+			color = red
+		elif self.is_non_bomb_in_config:
+			color = dark_green
 		else:
 			color = grey
 		pg.draw.rect(screen, color, (x,y, tile_length, tile_length))
