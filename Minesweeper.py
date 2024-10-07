@@ -1,6 +1,6 @@
 #Minesweeper!!
 #V0.6
-"""Changes: 
+"""Changes:
 	Initial click no longer destroys bombs. yay!
 	The user can now restart at any time. "R"
 	Winning with the second condition (revealing all tiles except for the bombs) will now flag all unflagged bombs.
@@ -22,7 +22,7 @@ relative_board_length = 950
 #Increase to make margins bigger
 relative_margin_length = 2
 
-use_sample_board = True
+use_sample_board = False
 
 sample = [
 	[' ', ' ', 'x', ' ', 'x', ' ', ' ', 'x', 'x', ' '] ,
@@ -43,8 +43,8 @@ if use_sample_board:
 	board_width = len(sample[0])
 	board_height = len(sample)
 else:
-	board_width = 10
-	board_height = 10
+	board_width = 25
+	board_height = 20
 bomb_percentage = 20.75
 
 
@@ -106,7 +106,7 @@ class Board:
 
 	@staticmethod
 	def create_custom_board(bomb_array, first_tile):
-		"""Create a board from an array of either "x"s or "" with "x" 
+		"""Create a board from an array of either "x"s or "" with "x"
 		representing a bomb and anything else representing... not a bomb
 
 		AND
@@ -217,7 +217,7 @@ class Board:
 		for row in self.tiles:
 			for tile in row:
 				if tile.is_flagged:
-					flaggedTiles.append(tile)				
+					flaggedTiles.append(tile)
 				if tile.is_found:
 					foundTiles.append(tile)
 				if tile.is_revealed:
@@ -252,7 +252,7 @@ class Board:
 		self.first_tile = mainSafeTile.coords
 		safeTiles = mainSafeTile.surrounding_bombs(mode=3)
 		safeTiles.append(mainSafeTile)
-		chance = perc_bombs / 100 
+		chance = perc_bombs / 100
 		bombs_num = int(self.width * self.height * chance)
 		for tile in range(bombs_num):
 			while True:
@@ -407,7 +407,7 @@ class Board:
 
 		# Recursive case
 		configurations = []
-		
+
 		# Find the first key with a value of None
 		for key in configuration:
 			if configuration[key] == None:
@@ -426,7 +426,7 @@ class Board:
 			configurations += self.get_configurations_helper(configuration_copy_2, depth=depth+1)
 
 		return configurations
-	
+
 	def is_valid_configuration(self, configuration):
 		"""
 		Return False if 'configuration' is illegal given the current board state.
@@ -529,7 +529,7 @@ class Tile:
 		self.needs_update = False
 		#/TEMPORARY
 
-	def activate(self, button):	
+	def activate(self, button):
 		"""Will change or not change the atttributes of the tile based off of
 		the button that the user presses and also the current attributes."""
 		#If the tile has not been revealed and someone right clicks, toggle is_flagged
@@ -555,7 +555,7 @@ class Tile:
 					print(f'L {self.coords}')
 
 	def reveal(self):
-		"""What to do when someone reveals (left click) a 
+		"""What to do when someone reveals (left click) a
 		tile or the sytem reveals a tile."""
 		if not self.is_flagged:
 			self.needs_update = True
@@ -612,7 +612,7 @@ class Tile:
 		if mode == 3:
 			return tiles
 		else:
-			return bomb_count 
+			return bomb_count
 
 
 class Timer:
@@ -670,7 +670,7 @@ def win():
 
 def lose():
 	"""A game loop for when the player loses."""
-	
+
 	print('boom! Press ESC to quit. Press R to restart')
 	endgame()
 
