@@ -536,6 +536,23 @@ class Solve(unittest.TestCase):
         )
         self.assertTrue(board.is_solvable())
 
+    def test_big_board2(self):
+        board = Board.create_custom_board(
+            [
+                [' ', ' ', ' ', ' ', 'x', ' ', ' ', 'x', ' ', ' '] ,
+                [' ', 'x', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' '] ,
+                [' ', 'x', ' ', ' ', ' ', ' ', ' ', 'x', ' ', 'x'] ,
+                ['x', ' ', ' ', ' ', ' ', ' ', ' ', 'x', 'x', 'x'] ,
+                [' ', ' ', ' ', ' ', ' ', 'x', 'x', ' ', ' ', 'x'] ,
+                [' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' '] ,
+                [' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', 'x', 'x'] ,
+                [' ', 'x', ' ', 'x', ' ', ' ', ' ', 'x', 'x', 'x'] ,
+                [' ', ' ', ' ', 'x', 'x', ' ', ' ', ' ', ' ', ' '] ,
+                [' ', ' ', ' ', 'x', ' ', 'x', 'x', 'x', 'x', ' '] ,
+            ], (2,4)
+        )
+        self.assertFalse(board.is_solvable())
+
 
 if __name__ == '__main__':
     unittest.main()
