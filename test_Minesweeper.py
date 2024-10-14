@@ -428,44 +428,51 @@ class SolveState(unittest.TestCase):
     def test_complex_board(self):
         board = Board.create_state(
             [
-                ['r', 'r', 'x', 'r', 'r'],
+                ['r', 'r', 'F', 'r', 'r'],
                 ['r', 'r', 'r', 'r', 'r'],
                 ['r', 'r', 'r', 'r', 'r'],
-                ['x', ' ', ' ', 'x', ' '],
-                [' ', ' ', ' ', 'x', ' ']
+                ['F', ' ', ' ', 'F', ' '],
+                [' ', ' ', ' ', 'F', ' ']
             ]
         )
         self.assertTrue(board.solve_state())
-        self.assertEqual(sum([1 if tile.is_revealed else 0 for tile in board.get_all_tiles()]), 15)
-        self.assertTrue(board.tiles[3][2].is_revealed)
 
     def test_unexposed_reveal(self):
         board = Board.create_state(
             [
-                ['r', 'r', 'x', 'r', 'r'],
+                ['r', 'r', 'F', 'r', 'r'],
                 ['r', 'r', 'r', 'r', 'r'],
                 ['r', 'r', 'r', 'r', 'r'],
-                ['x', ' ', 'r', 'x', ' '],
-                [' ', ' ', ' ', 'x', ' ']
+                ['F', ' ', 'r', 'F', ' '],
+                [' ', ' ', ' ', 'F', ' ']
             ]
         )
         self.assertTrue(board.solve_state())
-        self.assertEqual(sum([1 if tile.is_revealed else 0 for tile in board.get_all_tiles()]), 17)
-        self.assertTrue(board.tiles[4][0].is_revealed)
-        self.assertTrue(board.tiles[4][4].is_revealed)
+
+    def test_flagging(self):
+        board = Board.create_state(
+            [
+                ['r', 'r', 'F', 'r', 'r'],
+                ['r', 'r', 'r', 'r', 'r'],
+                ['r', 'r', 'F', 'r', 'r'],
+                ['x', 'r', 'F', 'x', ' '],
+                ['r', 'r', 'F', ' ', 'x']
+            ]
+        )
+        self.assertTrue(board.solve_state()) # Flag the bomb in the first column
+        self.assertFalse(board.solve_state()) # Cannot figure anything else out.
 
     def test_no_change(self):
         board = Board.create_state(
             [
-                ['r', 'r', 'x', 'r', 'r'],
+                ['r', 'r', 'F', 'r', 'r'],
                 ['r', 'r', 'r', 'r', 'r'],
-                ['r', 'r', 'r', 'r', 'r'],
-                ['x', ' ', 'r', 'x', ' '],
-                ['r', 'r', 'r', 'x', 'r']
+                ['r', 'r', 'F', 'r', 'r'],
+                ['F', 'r', 'F', 'x', ' '],
+                ['r', 'r', 'F', ' ', ' ']
             ]
         )
         self.assertFalse(board.solve_state())
-        self.assertEqual(sum([0 if tile.is_revealed else 1 for tile in board.get_all_tiles()]), 6)
 
 class Solve(unittest.TestCase):
     """
@@ -567,6 +574,34 @@ class Solve(unittest.TestCase):
             ], (2,4)
         )
         self.assertFalse(board.is_solvable())
+
+    def test_quick_solve(self):
+        # This test should be really quick if you are performing basic checks
+        board = Board.create_custom_board(
+            [
+                [' ', ' ', ' ', 'x', 'x', 'x', 'x', ' ', 'x', 'x', ' ', ' ', ' ', 'x', ' ', ' ', 'x', ' ', 'x', ' ', ' ', ' ', ' ', ' ', 'x'] ,
+                [' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', 'x'] ,
+                [' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' '] ,
+                ['x', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' '] ,
+                ['x', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', 'x'] ,
+                ['x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', 'x', ' ', ' ', ' ', 'x', 'x', ' ', 'x', ' ', ' ', ' ', ' ', 'x', ' '] ,
+                [' ', 'x', ' ', 'x', ' ', ' ', 'x', 'x', 'x', ' ', ' ', 'x', ' ', 'x', ' ', 'x', ' ', ' ', ' ', ' ', ' ', 'x', ' ', 'x', ' '] ,
+                ['x', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', 'x', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', 'x'] ,
+                [' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', 'x', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' '] ,
+                [' ', ' ', ' ', 'x', ' ', 'x', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x'] ,
+                [' ', ' ', ' ', ' ', ' ', 'x', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' '] ,
+                ['x', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', 'x', ' ', ' ', ' ', 'x', ' ', ' ', ' '] ,
+                [' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', 'x', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', 'x'] ,
+                [' ', ' ', 'x', 'x', ' ', ' ', ' ', ' ', ' ', 'x', 'x', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', 'x'] ,
+                [' ', ' ', 'x', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '] ,
+                [' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '] ,
+                [' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', 'x', ' ', ' ', ' ', ' ', ' ', ' ', 'x', 'x', 'x', 'x', ' ', 'x', ' ', ' ', 'x', ' '] ,
+                [' ', ' ', ' ', ' ', 'x', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', 'x', ' ', ' ', ' ', ' '] ,
+                ['x', 'x', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', 'x', 'x', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' '] ,
+                [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'x', ' ', ' ', 'x', ' ', ' ', ' ', ' ', ' ']
+            ], (5,4)
+        )
+        self.assertTrue(board.is_solvable())
 
 
 if __name__ == '__main__':

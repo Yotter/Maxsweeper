@@ -45,7 +45,7 @@ if use_sample_board:
 else:
 	board_width = 25
 	board_height = 20
-bomb_percentage = 20.75
+bomb_percentage = 15
 
 
 #Colors:
@@ -53,6 +53,7 @@ white = (255,255,255)
 black = (0,0,0)
 grey = (128,128,128)
 dark_grey = (50,50,50)
+dark_red = (110, 15, 15)
 
 tile_1_color = (0,1,253)
 tile_2_color = (1,126,0)
@@ -88,14 +89,17 @@ displayW, displayH = (board_length_width, board_length_height)
 
 class Board:
 
-	def __init__(self, width, height):
+	def __init__(self, width, height, bomb_percentage):
 		self.width = width
 		self.height = height
+		self.bomb_percentage = bomb_percentage
 		self.bomb_count = 0
 		self.tiles = []
 		self.nummed_tiles = [] # Tiles that appear as a number on the board (are surrounded by > 0 bombs and not a bomb themselves)
+		self.n_flagged_by_solver = 0
 		self.win = False
 		self.lose = False
+		self.do_draw = True
 		self.pre_reveal = True
 		self.first_tile = None
 		for row in range(height):
@@ -115,13 +119,13 @@ class Board:
 		be revealed immediately."""
 
 		# Create board
-		board = Board(len(bomb_array[0]), len(bomb_array))
+		board = Board(len(bomb_array[0]), len(bomb_array), bomb_percentage=0)
 		board.first_tile = first_tile
 
 		# Add bombs
 		for row in range(len(bomb_array)):
 			for col in range(len(bomb_array[row])):
-				if bomb_array[row][col] == 'x':
+				if bomb_array[row][col] in ('x', 'F'):
 					board.tiles[row][col].is_bomb = True
 		board.bomb_count = sum([sum([1 for tile in row if tile.is_bomb]) for row in board.tiles])
 
@@ -132,6 +136,23 @@ class Board:
 		board.pre_reveal = False
 
 		return board
+
+	@staticmethod
+	def generate_solvable_board(width, height, bomb_percentage):
+		attempts = 0
+		print("Attempting to generate a solvable board...")
+		while attempts < 10:
+			board = Board(width, height, bomb_percentage)
+			first_tile = choice(board.get_all_tiles())
+			first_tile.first_reveal()
+			# board.do_draw = False
+			if board.is_solvable():
+				print("Solvable board generated!")
+				board.do_draw = True
+				return board
+			else:
+				print("Not solvable, trying again...")
+		print("Attempted 10 times to generate solvable boards and could not.")
 
 	@staticmethod
 	def create_state(matrix, first_tile=None):
@@ -210,6 +231,9 @@ class Board:
 	def draw(self,draw_all=False):
 		"""Draws the every tile in self.tiles and textto the board.
 		Will also update to check for win or lose."""
+		if not self.do_draw:
+			return;
+
 		foundTiles = []
 		revealedTiles = []
 		flaggedTiles = []
@@ -245,14 +269,13 @@ class Board:
 				for tile in unrevealedTiles:
 					tile.is_flagged = True
 
-	def add_bombs(self, perc_bombs, mainSafeTile):
-		"""Adds bombs to the board. takes perc_bombs% of the board
-		will be bombs. Ex: let perc_bombs = 1, 1% of the board will have bombs.
+	def add_bombs(self, mainSafeTile):
+		"""Adds bombs to the board.
 		The mainSafeTile and it's 8 surrounding tiles will not have bombs."""
 		self.first_tile = mainSafeTile.coords
 		safeTiles = mainSafeTile.surrounding_bombs(mode=3)
 		safeTiles.append(mainSafeTile)
-		chance = perc_bombs / 100
+		chance = self.bomb_percentage / 100
 		bombs_num = int(self.width * self.height * chance)
 		for tile in range(bombs_num):
 			while True:
@@ -266,16 +289,19 @@ class Board:
 						break
 		self.bomb_count = bombs_num
 
-	def get_exposed_tiles(self):
+	def get_exposed_tiles(self, includeFlagged=True):
 		"""Return a list of all unrevealed tiles that are adjacent to revealed tiles."""
 		exposed_tiles = []
 		for row in self.tiles:
 			for tile in row:
+				if (tile.is_flagged) and not includeFlagged:
+					continue
 				if not tile.is_revealed:
 					for neighbor_tile in tile.surrounding_bombs(mode=3):
 						if neighbor_tile.is_revealed:
 							if tile not in exposed_tiles:
 								exposed_tiles.append(tile)
+								break
 		return exposed_tiles
 
 	def reset(self):
@@ -295,13 +321,16 @@ class Board:
 		self.pre_reveal = False
 
 
-	def is_solvable(self):
+	def is_solvable(self, reset_on_finish=True):
 		"""
 		@return True if the board is could be solved, False if it is not solvable.
 		"""
 		# Solve each state
 		while self.solve_state():
-			pass
+			if __name__ == "__main__":
+				self.draw()
+				pg.display.update()
+				clock.tick()
 
 		# Check for win or stuck
 		solved = False
@@ -309,7 +338,7 @@ class Board:
 		if unrevealed_tile_count == self.bomb_count:
 			solved = True
 
-		if __name__ != "__main__":
+		if reset_on_finish:
 			self.reset()
 		for tile in self.get_all_tiles():
 			tile.needs_update = True
@@ -317,10 +346,14 @@ class Board:
 
 	def solve_state(self):
 		"""
-		Uncover every tile that is definitely not a bomb given the current board state.
+		Uncover every tile that is definitely not a bomb and flag all those that definitely are
+		given the current board state.
 		@return True if the state changed, False otherwise.
 		@changes self.tiles
 		"""
+		if (self.quick_solve_state()):
+			return True
+
 		state_changed = False
 		# Get all possible configurations of bombs on exposed tiles
 		configurations = self.get_configurations()
@@ -331,29 +364,62 @@ class Board:
 
 		# Determine which tiles are ALWAYS bombs and which are ALWAYS not bombs
 		master_configuration = configurations[0]
-		all_bombs_in_exposed_tiles = list(master_configuration.values()).count(True) == self.bomb_count
+		all_bombs_in_exposed_tiles = list(master_configuration.values()).count(True) + self.n_flagged_by_solver == self.bomb_count
 		for configuration in configurations[1:]:
-			if list(configuration.values()).count(True) != self.bomb_count:
+			if list(configuration.values()).count(True) + self.n_flagged_by_solver != self.bomb_count:
 				all_bombs_in_exposed_tiles = False
 			for key in configuration:
 				if configuration[key] != master_configuration[key]:
 					master_configuration[key] = None
 
-		# Uncover all tiles that are definitely not bombs
+		# Uncover all tiles that are definitely not bombs and flag all that are
 		for tile, is_bomb in master_configuration.items():
 			x,y = tile
-			if is_bomb == False:
+			if is_bomb:
+				self.tiles[y][x].is_flagged = True
+				self.n_flagged_by_solver += 1
+			elif is_bomb == False:
 				state_changed = True
 				self.tiles[y][x].reveal()
 		if all_bombs_in_exposed_tiles:
 			# Uncover all unexposed tiles
 			for tile in self.get_all_tiles():
-				if tile.coords not in master_configuration and not tile.is_revealed: # every config. has exactly the exposed tile coords as keys
+				# every config has the exposed tile coords as keys
+				if tile.coords not in master_configuration and not tile.is_revealed and not tile.is_flagged:
 					state_changed = True
 					tile.reveal()
 
 		return state_changed
 
+	def quick_solve_state(self):
+		"""Use the most basic Minesweeper rules (satisfaction and requirement) to find a single change (if one can be found)"""
+		for tile in self.nummed_tiles:
+			neighbors = tile.surrounding_bombs(mode=3)
+			possible_bomb_spots = 0
+			flagged_spots = 0
+			for neighbor in neighbors:
+				if not neighbor.is_revealed:
+					possible_bomb_spots += 1
+					if neighbor.is_flagged:
+						flagged_spots += 1
+
+			# Check if tile requires all neighboring unreaveled tiles to be bombs
+			if (possible_bomb_spots == tile.num and flagged_spots < tile.num):
+				neighbors = tile.surrounding_bombs(mode=3)
+				for neighbor in neighbors:
+					if not neighbor.is_revealed:
+						if not neighbor.is_flagged:
+							neighbor.is_flagged = True
+							self.n_flagged_by_solver += 1
+						neighbor.needs_update = True
+				return True
+
+			# Check if tile is already satisfied
+			if (flagged_spots == tile.num and possible_bomb_spots > tile.num):
+				neighbors = tile.surrounding_bombs(mode=2) # Reveal all tiles neighbors (revealing flagged tiles does nothing)
+				return True
+
+		return False
 
 	def get_configurations(self):
 		"""Returns a list of all the possible configurations for the exposed tiles as lists of bombs represented as True and non-bombs represented as False like so:
@@ -391,7 +457,7 @@ class Board:
 			]
 		As an example for a board  with 8 exposed tiles with 3 possible configurations.
 		"""
-		exposed_tiles = self.get_exposed_tiles()
+		exposed_tiles = self.get_exposed_tiles(includeFlagged=False)
 
 		# Initialize blank_configuration
 		blank_configuration = {}
@@ -399,6 +465,8 @@ class Board:
 			blank_configuration[tile.coords] = None
 
 		# Call recursive helper function
+		if (len(self.get_configurations_helper(blank_configuration, depth=0)) == 0):
+			pass
 		return self.get_configurations_helper(blank_configuration, depth=0)
 
 	def get_configurations_helper(self, configuration, depth=0):
@@ -409,7 +477,7 @@ class Board:
 			- None: The tile has not been assigned a value yet.
 		@return a list of all *possible* configurations."""
 
-		# Draw (unless testing)
+		# Draw config discovery
 		if __name__ == "__main__":
 			for tile, value in configuration.items():
 				if value == True:
@@ -422,7 +490,7 @@ class Board:
 					self.tiles[tile[1]][tile[0]].is_non_bomb_in_config = False
 					self.tiles[tile[1]][tile[0]].is_bomb_in_config = False
 				self.tiles[tile[1]][tile[0]].needs_update = True
-			board.draw()
+			self.draw()
 			pg.display.update()
 			clock.tick()
 
@@ -464,7 +532,7 @@ class Board:
 		"""
 
 		# Check if there are more bombs than the board allows
-		if list(configuration.values()).count(True) > self.bomb_count:
+		if list(configuration.values()).count(True) + self.n_flagged_by_solver > self.bomb_count:
 			# print('INVALID: Too many bombs')
 			return False
 
@@ -493,6 +561,8 @@ class Board:
 						bombs_around_tile += 1
 					elif configuration[surrounding_tile.coords] == None:
 						unknowns_around_tile += 1
+				elif surrounding_tile.is_flagged:
+					bombs_around_tile += 1
 
 			# Check if any numbered tile has more bombs than its number
 			if bombs_around_tile > tile.num:
@@ -548,7 +618,7 @@ class Tile:
 		elif self.board.lose and self.is_bomb:
 			color = black
 		elif self.is_bomb_in_config:
-			color = red
+			color = dark_red
 		elif self.is_non_bomb_in_config:
 			color = dark_green
 		else:
@@ -611,16 +681,16 @@ class Tile:
 	def first_reveal(self):
 		"""A function for when the user first reveals a tile.
 		This makes sure that it opens something up right off the bat."""
-		self.board.add_bombs(bomb_percentage, self)
+		self.board.add_bombs(self)
 		self.reveal()
 		self.board.pre_reveal = False
 
 		# DEV
-		bomb_array = [["x" if self.board.tiles[y][x].is_bomb else ' ' for x in range(self.board.width)] for y in range(self.board.height)]
-		print('First tile revealed at ' + str(self.coords))
-		print("Bomb array: ")
-		for row in bomb_array:
-			print(row, ",")
+		# bomb_array = [["x" if self.board.tiles[y][x].is_bomb else ' ' for x in range(self.board.width)] for y in range(self.board.height)]
+		# print('First tile revealed at ' + str(self.coords))
+		# print("Bomb array: ")
+		# for row in bomb_array:
+		# 	print(row, ",")
 		# END DEV
 		if __name__ == '__main__':
 			timer.start()
@@ -730,10 +800,15 @@ def main():
 	timer = Timer()
 
 	global board
+	screen.fill(black)
+	pg.display.update()
 	if use_sample_board:
 		board = Board.create_custom_board(sample, first_tile)
 	else:
-		board = Board(board_width, board_height)
+		# Generate solvable board
+		board = Board.generate_solvable_board(board_width, board_height, bomb_percentage=bomb_percentage)
+		timer.start()
+		# board = Board(board_width, board_height)
 
 	screen.fill(white)
 
@@ -757,7 +832,8 @@ def main():
 					for row in state:
 						print(row, ',')
 				elif event.key == pg.K_s:
-					print(board.is_solvable())
+					if (not board.pre_reveal):
+						print(board.is_solvable(reset_on_finish=False))
 		board.draw()
 		pg.display.update()
 		if board.win:
