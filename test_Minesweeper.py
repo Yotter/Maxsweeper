@@ -603,6 +603,20 @@ class Solve(unittest.TestCase):
         )
         self.assertTrue(board.is_solvable())
 
+    def test_the_elusive_8(self):
+        board = Board.create_custom_board(
+            [
+                [' ', ' ', ' ', ' ', ' ', ' ', ' '],
+                [' ', ' ', ' ', ' ', ' ', ' ', ' '],
+                [' ', ' ', 'x', 'x', 'x', ' ', ' '],
+                [' ', ' ', 'x', ' ', 'x', ' ', ' '],
+                [' ', ' ', 'x', 'x', 'x', ' ', ' '],
+                [' ', ' ', ' ', ' ', ' ', ' ', ' '],
+                [' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            ], (0,0)
+        )
+        self.assertTrue(board.is_solvable())
+
 
 if __name__ == '__main__':
     unittest.main()
