@@ -519,6 +519,21 @@ class Solve(unittest.TestCase):
         self.assertTrue(board.is_solvable())
         self.assertEqual(sum([1 if tile.is_revealed else 0 for tile in board.get_all_tiles()]), 10)
 
+    def test_complex_board3(self):
+        board = Board.create_custom_board(
+            [
+                [' ', ' ', ' ', ' ', ' ', ' '],
+                [' ', ' ', ' ', ' ', ' ', ' '],
+                [' ', ' ', ' ', 'x', ' ', ' '],
+                [' ', ' ', 'x', 'x', 'x', ' '],
+                [' ', ' ', 'x', ' ', ' ', ' '],
+                [' ', ' ', 'x', ' ', ' ', ' '],
+            ], (1, 1)
+        )
+        self.assertTrue(board.is_solvable())
+        self.assertEqual(sum([1 if tile.is_revealed else 0 for tile in board.get_all_tiles()]), 23)
+
+
     def test_big_board1(self):
         board = Board.create_custom_board(
             [

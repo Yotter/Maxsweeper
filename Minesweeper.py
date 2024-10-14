@@ -309,7 +309,8 @@ class Board:
 		if unrevealed_tile_count == self.bomb_count:
 			solved = True
 
-		# self.reset()
+		if __name__ != "__main__":
+			self.reset()
 		for tile in self.get_all_tiles():
 			tile.needs_update = True
 		return solved
