@@ -1,17 +1,12 @@
 #Minesweeper!!
 #V0.6
 """Changes:
-	Initial click no longer destroys bombs. yay!
-	The user can now restart at any time. "R"
-	Winning with the second condition (revealing all tiles except for the bombs) will now flag all unflagged bombs.
-	Added timer!
-	Added dark green flags when win.
-	Appropriate colors for numbers.
+	No-Guess Minesweeper implemented. When launching, the app will generate boards until a solvable one is generated.
+	Added a solver that is used to determine solvability, can also be run by pressing the 's' key
 """
 """Todo:
-	Visualize win (i.e. display "Yu win!" on screen... or something)
 	UI
-	No guess Minesweeper
+	Optimize solver...
 """
 import pygame as pg
 from time import sleep, time
@@ -43,9 +38,9 @@ if use_sample_board:
 	board_width = len(sample[0])
 	board_height = len(sample)
 else:
-	board_width = 25
+	board_width = 20
 	board_height = 20
-bomb_percentage = 15
+bomb_percentage = 18
 
 
 #Colors:
