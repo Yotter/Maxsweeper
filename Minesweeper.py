@@ -138,21 +138,25 @@ class Board:
 		return board
 
 	@staticmethod
-	def generate_solvable_board(width, height, bomb_percentage):
+	def generate_solvable_board(width, height, bomb_percentage, verbose=False):
 		attempts = 0
-		print("Attempting to generate a solvable board...")
+		if verbose:
+			print("Attempting to generate a solvable board...")
 		while attempts < 10:
 			board = Board(width, height, bomb_percentage)
 			first_tile = choice(board.get_all_tiles())
 			first_tile.first_reveal()
 			# board.do_draw = False
 			if board.is_solvable():
-				print("Solvable board generated!")
+				if verbose:
+					print("Solvable board generated!")
 				board.do_draw = True
 				return board
 			else:
-				print("Not solvable, trying again...")
-		print("Attempted 10 times to generate solvable boards and could not.")
+				if verbose:
+					print("Not solvable, trying again...")
+		if verbose:
+			print("Attempted 10 times to generate solvable boards and could not.")
 
 	@staticmethod
 	def create_state(matrix, first_tile=None):
@@ -319,7 +323,7 @@ class Board:
 		self.pre_reveal = True
 		self.tiles[self.first_tile[1]][self.first_tile[0]].reveal()
 		self.pre_reveal = False
-
+		self.n_flagged_by_solver = 0
 
 	def is_solvable(self, reset_on_finish=True):
 		"""
@@ -465,8 +469,6 @@ class Board:
 			blank_configuration[tile.coords] = None
 
 		# Call recursive helper function
-		if (len(self.get_configurations_helper(blank_configuration, depth=0)) == 0):
-			pass
 		return self.get_configurations_helper(blank_configuration, depth=0)
 
 	def get_configurations_helper(self, configuration, depth=0):
@@ -806,7 +808,7 @@ def main():
 		board = Board.create_custom_board(sample, first_tile)
 	else:
 		# Generate solvable board
-		board = Board.generate_solvable_board(board_width, board_height, bomb_percentage=bomb_percentage)
+		board = Board.generate_solvable_board(board_width, board_height, bomb_percentage=bomb_percentage, verbose=True)
 		timer.start()
 		# board = Board(board_width, board_height)
 

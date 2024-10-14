@@ -1,6 +1,7 @@
 import unittest
 
 from Minesweeper import *
+from random import seed
 
 class TestingTools:
     """
@@ -617,6 +618,16 @@ class Solve(unittest.TestCase):
         )
         self.assertTrue(board.is_solvable())
 
+class GenerateSolvable(unittest.TestCase):
+    """
+    Tests for Board.generate_solvable_board
+    """
+
+    def test_large_board(self):
+        seed(12345678911)
+        board = Board.generate_solvable_board(15, 10, 15)
+        self.assertTrue(board.is_solvable())
+        seed() # Clear seed
 
 if __name__ == '__main__':
     unittest.main()
