@@ -309,7 +309,9 @@ class Board:
 		if unrevealed_tile_count == self.bomb_count:
 			solved = True
 
-		self.reset()
+		# self.reset()
+		for tile in self.get_all_tiles():
+			tile.needs_update = True
 		return solved
 
 	def solve_state(self):
@@ -754,7 +756,7 @@ def main():
 					for row in state:
 						print(row, ',')
 				elif event.key == pg.K_s:
-					print(board.solve_state())
+					print(board.is_solvable())
 		board.draw()
 		pg.display.update()
 		if board.win:
